@@ -200,7 +200,7 @@ MonoBehaviour:
   chaseSpeed: 3.5
   attackDamage: 10
   attackCooldown: 1.5
-  attackAnimationDuration: 0.5
+  attackAnimationDuration: 0.4
 --- !u!95 &8852781826371524152
 Animator:
   serializedVersion: 7
@@ -341,13 +341,13 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 8506832373225578389}
   serializedVersion: 2
-  m_LocalRotation: {x: 0.7071065, y: -0, z: -0, w: 0.7071072}
-  m_LocalPosition: {x: 0, y: -0.48, z: 0}
+  m_LocalRotation: {x: -0.7071068, y: 0, z: 0, w: 0.7071068}
+  m_LocalPosition: {x: 0, y: 0.1, z: 0}
   m_LocalScale: {x: 1.75, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 7064386510298253646}
-  m_LocalEulerAnglesHint: {x: 90, y: 0, z: 0}
+  m_LocalEulerAnglesHint: {x: -90, y: 0, z: 0}
 --- !u!212 &4717187372062483616
 SpriteRenderer:
   serializedVersion: 3

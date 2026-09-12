@@ -9,6 +9,7 @@ public class PlayerController : MonoBehaviour
     private const string SprintActionName = "Sprint";
     private const string IsWalkingParameter = "isWalk";
     private const string IsSprintingParameter = "isSprint";
+    private const string IsStunnedParameter = "isStun";
 
     [Header("Movement")]
     [SerializeField] private float speed = 5.0f;
@@ -24,6 +25,7 @@ public class PlayerController : MonoBehaviour
     private Animator animator;
     private Vector3 moveDir;
     private bool isSprinting;
+    private float stunTimer;
 
     private void Awake()
     {
@@ -50,6 +52,18 @@ public class PlayerController : MonoBehaviour
 
     private void Update()
     {
+        if (stunTimer > 0f)
+        {
+            stunTimer -= Time.deltaTime;
+            moveDir = Vector3.zero;
+            isSprinting = false;
+            animator?.SetBool(IsStunnedParameter, true);
+            UpdateAnimationState();
+            return;
+        }
+
+        animator?.SetBool(IsStunnedParameter, false);
+
         if (moveAction == null)
             return;
 
@@ -64,9 +78,17 @@ public class PlayerController : MonoBehaviour
 
     private void UpdateAnimationState()
     {
-        bool isMoving = moveDir.sqrMagnitude > 0f;
+        bool isMoving = stunTimer <= 0f && moveDir.sqrMagnitude > 0f;
         animator?.SetBool(IsWalkingParameter, isMoving);
         animator?.SetBool(IsSprintingParameter, isMoving && isSprinting);
+    }
+
+    public void Stun(float duration)
+    {
+        stunTimer = Mathf.Max(stunTimer, duration);
+        moveDir = Vector3.zero;
+        isSprinting = false;
+        animator?.SetBool(IsStunnedParameter, true);
     }
 
     private void UpdateFacingDirection(float horizontalInput)
@@ -88,6 +110,12 @@ public class PlayerController : MonoBehaviour
     {
         if (rb != null)
         {
+            if (stunTimer > 0f)
+            {
+                rb.linearVelocity = Vector3.zero;
+                return;
+            }
+
             float currentSpeed = isSprinting ? sprintSpeed : speed;
             rb.linearVelocity = moveDir * currentSpeed;
         }

@@ -7,6 +7,7 @@ public class EnemyAI : MonoBehaviour
 
     private const string IsWalkingParameter = "isWalk";
     private const string IsAttackParameter = "isAttack";
+    private const string AttackStateName = "rat-attack";
 
     [Header("References")]
     [SerializeField] private Transform playerTransform;
@@ -38,6 +39,8 @@ public class EnemyAI : MonoBehaviour
     private float roamWaitTimer;
     private float nextAttackTime;
     private float attackAnimationTimer;
+    private float attackDamageTimer;
+    private bool attackDamagePending;
 
     private void Awake()
     {
@@ -64,6 +67,17 @@ public class EnemyAI : MonoBehaviour
     private void Update()
     {
         attackAnimationTimer = Mathf.Max(0f, attackAnimationTimer - Time.deltaTime);
+
+        if (attackDamagePending)
+        {
+            attackDamageTimer -= Time.deltaTime;
+
+            if (attackDamageTimer <= 0f)
+            {
+                playerDamageable?.TakeDamage(attackDamage);
+                attackDamagePending = false;
+            }
+        }
 
         if (playerTransform == null)
         {
@@ -137,14 +151,18 @@ public class EnemyAI : MonoBehaviour
     {
         rb.linearVelocity = Vector3.zero;
 
-        if (Time.time < nextAttackTime)
+        if (Time.time < nextAttackTime || attackDamagePending)
         {
             return;
         }
 
         attackAnimationTimer = attackAnimationDuration;
-        playerDamageable?.TakeDamage(attackDamage);
+        attackDamageTimer = attackAnimationDuration;
+        attackDamagePending = true;
         nextAttackTime = Time.time + attackCooldown;
+
+        if (animator != null)
+            animator.CrossFadeInFixedTime(AttackStateName, 0.05f, 0, 0f);
     }
 
     private void MoveTowards(Vector3 direction, float speed)

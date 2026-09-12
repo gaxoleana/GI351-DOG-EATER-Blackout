@@ -1,18 +1,18 @@
 using UnityEngine;
 using System;
-using System.Collections;
 
 public class EnemyHealth : MonoBehaviour, IDamageable
 {
     [Header("Health")]
     [SerializeField] private float maxHealth = 30f;
 
-    [Header("Hit Effect")]
+    [Header("Hit Animation")]
     [SerializeField] private float flickDuration = 0.1f;
 
-    private SpriteRenderer spriteRenderer;
+    private Animator animator;
     private float currentHealth;
     private bool isDead;
+    private float hitAnimationTimer;
 
     public event Action<float, float> OnHealthChanged;
     public static event Action<EnemyHealth> AnyEnemyDied;
@@ -20,7 +20,18 @@ public class EnemyHealth : MonoBehaviour, IDamageable
     private void Awake()
     {
         currentHealth = Mathf.Max(maxHealth, 0f);
-        spriteRenderer = GetComponentInChildren<SpriteRenderer>();
+        animator = GetComponent<Animator>();
+    }
+
+    private void Update()
+    {
+        if (hitAnimationTimer <= 0f)
+            return;
+
+        hitAnimationTimer -= Time.deltaTime;
+
+        if (hitAnimationTimer <= 0f)
+            animator?.SetBool("getHit", false);
     }
 
     public void TakeDamage(float amount)
@@ -30,7 +41,8 @@ public class EnemyHealth : MonoBehaviour, IDamageable
 
         ApplyDamage(amount);
         NotifyHealthChanged();
-        StartCoroutine(FlickWhite());
+        hitAnimationTimer = flickDuration;
+        animator?.SetBool("getHit", true);
 
         if (currentHealth <= 0f)
             Die();
@@ -44,17 +56,6 @@ public class EnemyHealth : MonoBehaviour, IDamageable
     private void NotifyHealthChanged()
     {
         OnHealthChanged?.Invoke(currentHealth, maxHealth);
-    }
-
-    private IEnumerator FlickWhite()
-    {
-        if (spriteRenderer == null)
-            yield break;
-
-        Color originalColor = spriteRenderer.color;
-        spriteRenderer.color = Color.white;
-        yield return new WaitForSeconds(flickDuration);
-        spriteRenderer.color = originalColor;
     }
 
     private void Die()
