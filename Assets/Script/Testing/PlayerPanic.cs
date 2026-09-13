@@ -59,7 +59,7 @@ public class PlayerPanic : MonoBehaviour
 
     private float CalculateTargetPanic()
     {
-        float nearestDistance = float.MaxValue;
+        float nearestDistanceSquared = float.MaxValue;
         int nearbyEnemyCount = 0;
         EnemyAI[] enemies = FindObjectsByType<EnemyAI>();
 
@@ -68,15 +68,17 @@ public class PlayerPanic : MonoBehaviour
             if (enemy == null)
                 continue;
 
-            float distance = Vector3.Distance(transform.position, enemy.transform.position);
-            nearestDistance = Mathf.Min(nearestDistance, distance);
+            float distanceSquared = (enemy.transform.position - transform.position).sqrMagnitude;
+            nearestDistanceSquared = Mathf.Min(nearestDistanceSquared, distanceSquared);
 
-            if (distance < panicStartDistance)
+            if (distanceSquared < panicStartDistance * panicStartDistance)
                 nearbyEnemyCount++;
         }
 
-        if (nearestDistance == float.MaxValue || nearestDistance >= panicStartDistance)
+        if (nearestDistanceSquared == float.MaxValue || nearestDistanceSquared >= panicStartDistance * panicStartDistance)
             return 0f;
+
+        float nearestDistance = Mathf.Sqrt(nearestDistanceSquared);
 
         float panic = Mathf.InverseLerp(
             panicStartDistance,

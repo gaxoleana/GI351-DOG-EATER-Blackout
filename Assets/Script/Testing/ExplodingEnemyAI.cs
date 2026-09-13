@@ -97,7 +97,7 @@ public class ExplodingEnemyAI : MonoBehaviour
         Vector3 toTarget = currentRoamTarget - transform.position;
         toTarget.y = 0f;
 
-        if (toTarget.magnitude <= roamPointTolerance)
+        if (toTarget.sqrMagnitude <= roamPointTolerance * roamPointTolerance)
         {
             rb.linearVelocity = Vector3.zero;
             roamWaitTimer -= Time.deltaTime;

@@ -36,7 +36,7 @@ public class EnemyHealth : MonoBehaviour, IDamageable
 
     public void TakeDamage(float amount)
     {
-        if (isDead)
+        if (amount <= 0f || isDead)
             return;
 
         ApplyDamage(amount);

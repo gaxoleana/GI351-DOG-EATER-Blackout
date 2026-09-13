@@ -3,10 +3,6 @@ using UnityEngine;
 [RequireComponent(typeof(Rigidbody), typeof(Collider))]
 public class LaserProjectile : MonoBehaviour
 {
-    [SerializeField] private float defaultSpeed = 18f;
-    [SerializeField] private float defaultDamage = 25f;
-    [SerializeField] private float defaultLifetime = 2f;
-
     private Rigidbody rb;
     private GameObject owner;
     private float damage;

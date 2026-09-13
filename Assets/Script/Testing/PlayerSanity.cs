@@ -11,6 +11,8 @@ public class PlayerSanity : MonoBehaviour
 
     public event Action<float, float> OnSanityChanged;
 
+    public float CurrentSanity => currentSanity;
+    public float MaxSanity => maxSanity;
     public bool HasSanity => currentSanity > 0f;
 
     private void Awake()
@@ -21,10 +23,6 @@ public class PlayerSanity : MonoBehaviour
     private void Start()
     {
         NotifySanityChanged();
-    }
-
-    private void Update()
-    {
     }
 
     public void Reduce(float amount)
@@ -47,13 +45,16 @@ public class PlayerSanity : MonoBehaviour
 
     public void Refill(float amount)
     {
+        if (amount <= 0f)
+            return;
+
         currentSanity = Mathf.Min(currentSanity + amount, maxSanity);
         NotifySanityChanged();
     }
 
     public bool TrySpend(float amount)
     {
-        if (currentSanity < amount)
+        if (amount <= 0f || currentSanity < amount)
             return false;
 
         currentSanity -= amount;

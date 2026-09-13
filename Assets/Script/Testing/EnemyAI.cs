@@ -57,9 +57,7 @@ public class EnemyAI : MonoBehaviour
         }
 
         if (playerTransform != null)
-        {
-            bool hasDamageable = playerTransform.TryGetComponent(out playerDamageable);
-        }
+            playerTransform.TryGetComponent(out playerDamageable);
 
         PickNewRoamTarget();
     }
@@ -85,9 +83,9 @@ public class EnemyAI : MonoBehaviour
         }
         else
         {
-            float distanceToPlayer = Vector3.Distance(transform.position, playerTransform.position);
-            State newState = distanceToPlayer <= attackRange ? State.Attacking
-                          : distanceToPlayer <= detectionRadius ? State.Chasing
+            float distanceToPlayerSquared = (playerTransform.position - transform.position).sqrMagnitude;
+            State newState = distanceToPlayerSquared <= attackRange * attackRange ? State.Attacking
+                          : distanceToPlayerSquared <= detectionRadius * detectionRadius ? State.Chasing
                           : State.Roaming;
             currentState = newState;
         }
@@ -125,7 +123,7 @@ public class EnemyAI : MonoBehaviour
         Vector3 toTarget = currentRoamTarget - transform.position;
         toTarget.y = 0f;
 
-        if (toTarget.magnitude <= roamPointTolerance)
+        if (toTarget.sqrMagnitude <= roamPointTolerance * roamPointTolerance)
         {
             rb.linearVelocity = Vector3.zero;
             roamWaitTimer -= Time.deltaTime;
@@ -143,6 +141,12 @@ public class EnemyAI : MonoBehaviour
     {
         Vector3 toPlayer = playerTransform.position - transform.position;
         toPlayer.y = 0f;
+
+        if (toPlayer.sqrMagnitude <= 0.0001f)
+        {
+            rb.linearVelocity = Vector3.zero;
+            return;
+        }
 
         MoveTowards(toPlayer.normalized, chaseSpeed);
     }

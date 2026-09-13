@@ -2790,14 +2790,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7c4b2c9e6f0d4a8ab1e3c5d7f9a2b6e1, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PanicBlackoutUI
-  worldStability: {fileID: 1904515115}
-  topEdge: {fileID: 2100000011}
-  bottomEdge: {fileID: 2100000021}
-  leftEdge: {fileID: 2100000031}
-  rightEdge: {fileID: 2100000041}
-  globalVolume: {fileID: 0}
-  maximumBlackoutSize: 0.2
+  playerPanic: {fileID: 1904515113}
+  globalVolume: {fileID: 832575518}
+  baseVignetteIntensity: 0.2
   maximumVignetteIntensity: 0.65
+  baseVignetteSmoothness: 0.2
+  maximumVignetteSmoothness: 0.55
   responseSpeed: 8
 --- !u!114 &1962541987
 MonoBehaviour:

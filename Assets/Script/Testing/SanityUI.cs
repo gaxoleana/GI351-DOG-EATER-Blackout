@@ -21,6 +21,12 @@ public class SanityUI : MonoBehaviour
             playerSanity.OnSanityChanged -= HandleSanityChanged;
     }
 
+    private void Start()
+    {
+        if (playerSanity != null)
+            HandleSanityChanged(playerSanity.CurrentSanity, playerSanity.MaxSanity);
+    }
+
     private void HandleSanityChanged(float current, float max)
     {
         float percentage = max > 0f ? Mathf.Clamp01(current / max) : 0f;

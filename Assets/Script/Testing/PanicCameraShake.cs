@@ -15,7 +15,7 @@ public class PanicCameraShake : MonoBehaviour
     {
         originalLocalPosition = transform.localPosition;
 
-        CinemachineCamera virtualCamera = FindFirstObjectByType<CinemachineCamera>();
+        CinemachineCamera virtualCamera = FindAnyObjectByType<CinemachineCamera>();
         if (virtualCamera == null)
             return;
 
