@@ -17,7 +17,7 @@ public sealed class HurtFlashTimer
 
     public void Trigger()
     {
-        animator?.SetBool(boolParameter, true);
+        animator?.SetBool(boolParameter, true); 
         framesRemaining = frameDuration;
     }
 

@@ -117,11 +117,15 @@ public class PlayerAbilities : MonoBehaviour
     private void OnRechargeStarted(InputAction.CallbackContext ctx)
     {
         isRecharging = true;
+        playerController?.SetSprintLocked(true);
+        playerController?.SetRechargeSlowdown(true);
     }
 
     private void OnRechargeCanceled(InputAction.CallbackContext ctx)
     {
         isRecharging = false;
+        playerController?.SetSprintLocked(false);
+        playerController?.SetRechargeSlowdown(false);
     }
 
     private void OnShieldStarted(InputAction.CallbackContext ctx)

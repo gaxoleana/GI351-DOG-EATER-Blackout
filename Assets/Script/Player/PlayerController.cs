@@ -25,6 +25,8 @@ public class PlayerController : MonoBehaviour
     private Animator animator;
     private Vector3 moveDir;
     private bool isSprinting;
+    private bool isSprintLocked;
+    private bool isRechargeSlowing;
     private float stunTimer;
     private float speedModifier = 1f;
 
@@ -71,7 +73,7 @@ public class PlayerController : MonoBehaviour
 
         movementInput = Vector2.ClampMagnitude(movementInput, 1f);
         moveDir = new Vector3(movementInput.x, 0.0f, movementInput.y);
-        isSprinting = sprintAction?.IsPressed() == true;
+        isSprinting = !isSprintLocked && sprintAction?.IsPressed() == true;
 
         UpdateAnimationState();
         UpdateFacingDirection(movementInput.x);
@@ -119,11 +121,25 @@ public class PlayerController : MonoBehaviour
         stunTimer = 0f;
         moveDir = Vector3.zero;
         isSprinting = false;
+        isSprintLocked = false;
+        isRechargeSlowing = false;
         speedModifier = 1f;
         if (rb != null)
             rb.linearVelocity = Vector3.zero;
 
         animator?.SetBool(IsStunnedParameter, false);
+    }
+
+    public void SetSprintLocked(bool isLocked)
+    {
+        isSprintLocked = isLocked;
+        if (isSprintLocked)
+            isSprinting = false;
+    }
+
+    public void SetRechargeSlowdown(bool isSlowing)
+    {
+        isRechargeSlowing = isSlowing;
     }
 
     public void EnableInputActions()
@@ -166,7 +182,10 @@ public class PlayerController : MonoBehaviour
             return;
         }
 
-        float currentSpeed = (isSprinting ? sprintSpeed : speed) * speedModifier;
+        float activeSpeed = isSprinting ? sprintSpeed : speed;
+        float rechargePenaltyMultiplier = isRechargeSlowing ? 0.85f : 1f;
+        float currentSpeed = activeSpeed * rechargePenaltyMultiplier * speedModifier;
+
         Vector3 movement = moveDir * currentSpeed * Time.fixedDeltaTime;
         rb.MovePosition(rb.position + movement);
         rb.linearVelocity = Vector3.zero;
