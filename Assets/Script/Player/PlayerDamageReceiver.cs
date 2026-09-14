@@ -2,44 +2,51 @@ using UnityEngine;
 
 public class PlayerDamageReceiver : MonoBehaviour, IDamageable
 {
-    private const string HitParameter = "getHit";
+    private const string IsHurtParameter = "isHurt";
+    private const int HurtFrameDuration = 10;
 
     [Header("References")]
     [SerializeField] private PlayerHealth playerHealth;
     [SerializeField] private PlayerAbilities playerAbilities;
 
-    [Header("Hit Effect")]
-    [SerializeField] private float flickDuration = 0.1f;
-
     private Animator animator;
-    private float hitAnimationTimer;
+    private int hurtFramesRemaining;
 
     private void Awake()
     {
         playerHealth ??= GetComponent<PlayerHealth>();
         playerAbilities ??= GetComponent<PlayerAbilities>();
         animator = GetComponent<Animator>();
+        animator ??= GetComponentInChildren<Animator>();
     }
 
-    private void Update()
+    private void LateUpdate()
     {
-        if (hitAnimationTimer <= 0f)
+        if (hurtFramesRemaining <= 0)
             return;
 
-        hitAnimationTimer -= Time.deltaTime;
+        hurtFramesRemaining--;
 
-        if (hitAnimationTimer <= 0f)
-            animator?.SetBool(HitParameter, false);
+        if (hurtFramesRemaining == 0)
+            animator?.SetBool(IsHurtParameter, false);
     }
 
     public void TakeDamage(float amount)
     {
-        hitAnimationTimer = flickDuration;
-        animator?.SetBool(HitParameter, true);
+        if (amount <= 0f)
+            return;
+
+        SetHurtAnimation(true);
+        hurtFramesRemaining = HurtFrameDuration;
 
         if (playerAbilities != null && playerAbilities.TryConsumeShield())
             return;
 
         playerHealth?.TakeDamage(amount);
+    }
+
+    private void SetHurtAnimation(bool isHurt)
+    {
+        animator?.SetBool(IsHurtParameter, isHurt);
     }
 }

@@ -3,13 +3,11 @@ using UnityEngine;
 
 public class EnemyHealth : HealthBase
 {
-    private const string HitParameter = "getHit";
-
-    [Header("Hit Animation")]
-    [SerializeField] private float flickDuration = 0.1f;
+    private const string IsHurtParameter = "isHurt";
+    private const int HurtFrameDuration = 10;
 
     private Animator animator;
-    private float hitAnimationTimer;
+    private int hurtFramesRemaining;
 
     public static event Action<EnemyHealth> AnyEnemyDied;
 
@@ -19,15 +17,15 @@ public class EnemyHealth : HealthBase
         animator = GetComponent<Animator>();
     }
 
-    private void Update()
+    private void LateUpdate()
     {
-        if (hitAnimationTimer <= 0f)
+        if (hurtFramesRemaining <= 0)
             return;
 
-        hitAnimationTimer -= Time.deltaTime;
+        hurtFramesRemaining--;
 
-        if (hitAnimationTimer <= 0f)
-            animator?.SetBool(HitParameter, false);
+        if (hurtFramesRemaining == 0)
+            animator?.SetBool(IsHurtParameter, false);
     }
 
     public override void TakeDamage(float amount)
@@ -35,8 +33,8 @@ public class EnemyHealth : HealthBase
         if (amount <= 0f || IsDead)
             return;
 
-        hitAnimationTimer = flickDuration;
-        animator?.SetBool(HitParameter, true);
+        animator?.SetBool(IsHurtParameter, true);
+        hurtFramesRemaining = HurtFrameDuration;
 
         base.TakeDamage(amount);
     }

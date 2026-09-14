@@ -141,7 +141,7 @@ public class LevelFailureManager : MonoBehaviour
         foreach (PlayerAbilities abilities in FindObjectsByType<PlayerAbilities>())
             abilities.enabled = false;
 
-        foreach (PlayerLaserAttack attack in FindObjectsByType<PlayerLaserAttack>())
+        foreach (PlayerAttack attack in FindObjectsByType<PlayerAttack>())
             attack.enabled = false;
     }
 

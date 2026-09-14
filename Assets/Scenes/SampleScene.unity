@@ -277,7 +277,7 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: f3e43db24d1a95e4eb993d84a55c7a65, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::LaserDamageDealer
+  m_EditorClassIdentifier: Assembly-CSharp::AttackDamageDealer
   damagePerTick: 10
   tickInterval: 0.2
 --- !u!1 &178097682
@@ -3379,7 +3379,7 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 04985e33d8c2a9648ad0bd1aba6078e3, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::PlayerLaserAttack
+  m_EditorClassIdentifier: Assembly-CSharp::PlayerAttack
   inputActions: {fileID: -944628639613478452, guid: 052faaac586de48259a63d0c4782560b, type: 3}
   projectilePrefab: {fileID: 1000000000000000000, guid: 7a9f3c1e5b2d4a6c8e0f123456789abc, type: 3}
   attackPoint: {fileID: 63153528}
