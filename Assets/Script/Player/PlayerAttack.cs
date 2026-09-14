@@ -49,9 +49,17 @@ public class PlayerAttack : MonoBehaviour
 
     }
 
+    public void EnableInputActions()
+    {
+        attackAction?.Enable();
+    }
+
     private void OnAttackPerformed(InputAction.CallbackContext ctx)
     {
-        if (Time.time < nextFireTime || projectilePrefab == null || attackPoint == null)
+        if (!PlayerPersistenceManager.IsGameplayActive
+            || Time.time < nextFireTime
+            || projectilePrefab == null
+            || attackPoint == null)
             return;
 
         if (playerSanity == null || !playerSanity.TrySpendPercent(sanityCostPercent))

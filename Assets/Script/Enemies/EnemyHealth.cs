@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using UnityEngine;
 
 public class EnemyHealth : HealthBase
@@ -6,26 +7,36 @@ public class EnemyHealth : HealthBase
     private const string IsHurtParameter = "isHurt";
     private const int HurtFrameDuration = 10;
 
+    private static readonly List<EnemyHealth> active = new();
+
     private Animator animator;
-    private int hurtFramesRemaining;
+    private HurtFlashTimer hurtFlash;
 
     public static event Action<EnemyHealth> AnyEnemyDied;
+
+    // Lets WorldStability read enemy count without scanning the scene every frame.
+    public static IReadOnlyList<EnemyHealth> Active => active;
 
     protected override void Awake()
     {
         base.Awake();
         animator = GetComponent<Animator>();
+        hurtFlash = new HurtFlashTimer(animator, IsHurtParameter, HurtFrameDuration);
+    }
+
+    private void OnEnable()
+    {
+        active.Add(this);
+    }
+
+    private void OnDisable()
+    {
+        active.Remove(this);
     }
 
     private void LateUpdate()
     {
-        if (hurtFramesRemaining <= 0)
-            return;
-
-        hurtFramesRemaining--;
-
-        if (hurtFramesRemaining == 0)
-            animator?.SetBool(IsHurtParameter, false);
+        hurtFlash.Tick();
     }
 
     public override void TakeDamage(float amount)
@@ -33,8 +44,7 @@ public class EnemyHealth : HealthBase
         if (amount <= 0f || IsDead)
             return;
 
-        animator?.SetBool(IsHurtParameter, true);
-        hurtFramesRemaining = HurtFrameDuration;
+        hurtFlash.Trigger();
 
         base.TakeDamage(amount);
     }

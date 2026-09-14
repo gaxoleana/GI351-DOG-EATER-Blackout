@@ -34,14 +34,12 @@ public class PlayerController : MonoBehaviour
         spriteRenderer = GetComponentInChildren<SpriteRenderer>();
         animator = GetComponent<Animator>();
 
-        moveAction = InputActionUtils.Find(inputActions, PlayerActionMapName, MoveActionName);
-        sprintAction = InputActionUtils.Find(inputActions, PlayerActionMapName, SprintActionName);
+        ResolveInputActions();
     }
 
     private void OnEnable()
     {
-        moveAction?.Enable();
-        sprintAction?.Enable();
+        EnableInputActions();
     }
 
     private void OnDisable()
@@ -64,16 +62,39 @@ public class PlayerController : MonoBehaviour
 
         animator?.SetBool(IsStunnedParameter, false);
 
-        if (moveAction == null)
-            return;
+        Vector2 movementInput = moveAction != null
+            ? moveAction.ReadValue<Vector2>()
+            : Vector2.zero;
 
-        Vector2 movementInput = moveAction.ReadValue<Vector2>();
+        if (movementInput.sqrMagnitude <= 0.0001f)
+            movementInput = ReadKeyboardMovement();
+
         movementInput = Vector2.ClampMagnitude(movementInput, 1f);
         moveDir = new Vector3(movementInput.x, 0.0f, movementInput.y);
         isSprinting = sprintAction?.IsPressed() == true;
 
         UpdateAnimationState();
         UpdateFacingDirection(movementInput.x);
+    }
+
+    private static Vector2 ReadKeyboardMovement()
+    {
+        if (Keyboard.current == null)
+            return Vector2.zero;
+
+        float horizontal = 0f;
+        float vertical = 0f;
+
+        if (Keyboard.current.aKey.isPressed || Keyboard.current.leftArrowKey.isPressed)
+            horizontal -= 1f;
+        if (Keyboard.current.dKey.isPressed || Keyboard.current.rightArrowKey.isPressed)
+            horizontal += 1f;
+        if (Keyboard.current.sKey.isPressed || Keyboard.current.downArrowKey.isPressed)
+            vertical -= 1f;
+        if (Keyboard.current.wKey.isPressed || Keyboard.current.upArrowKey.isPressed)
+            vertical += 1f;
+
+        return new Vector2(horizontal, vertical);
     }
 
     private void UpdateAnimationState()
@@ -89,6 +110,30 @@ public class PlayerController : MonoBehaviour
         moveDir = Vector3.zero;
         isSprinting = false;
         animator?.SetBool(IsStunnedParameter, true);
+    }
+
+    public void ResetControlState()
+    {
+        stunTimer = 0f;
+        moveDir = Vector3.zero;
+        isSprinting = false;
+        speedModifier = 1f;
+        rb.linearVelocity = Vector3.zero;
+        animator?.SetBool(IsStunnedParameter, false);
+    }
+
+    public void EnableInputActions()
+    {
+        ResolveInputActions();
+        inputActions?.FindActionMap(PlayerActionMapName)?.Enable();
+        moveAction?.Enable();
+        sprintAction?.Enable();
+    }
+
+    private void ResolveInputActions()
+    {
+        moveAction = InputActionUtils.Find(inputActions, PlayerActionMapName, MoveActionName);
+        sprintAction = InputActionUtils.Find(inputActions, PlayerActionMapName, SprintActionName);
     }
 
     private void UpdateFacingDirection(float horizontalInput)
@@ -108,17 +153,19 @@ public class PlayerController : MonoBehaviour
 
     private void FixedUpdate()
     {
-        if (rb != null)
-        {
-            if (stunTimer > 0f)
-            {
-                rb.linearVelocity = Vector3.zero;
-                return;
-            }
+        if (rb == null)
+            return;
 
-            float currentSpeed = (isSprinting ? sprintSpeed : speed) * speedModifier;
-            rb.linearVelocity = moveDir * currentSpeed;
+        if (stunTimer > 0f)
+        {
+            rb.linearVelocity = Vector3.zero;
+            return;
         }
+
+        float currentSpeed = (isSprinting ? sprintSpeed : speed) * speedModifier;
+        Vector3 movement = moveDir * currentSpeed * Time.fixedDeltaTime;
+        rb.MovePosition(rb.position + movement);
+        rb.linearVelocity = Vector3.zero;
     }
 
     // Lets other systems (e.g. PlayerAbilities' Shield) apply a temporary move-speed penalty/bonus.

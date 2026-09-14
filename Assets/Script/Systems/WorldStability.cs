@@ -58,7 +58,7 @@ public class WorldStability : MonoBehaviour, IResourceStat
         scanTimer -= Time.deltaTime;
         if (scanTimer <= 0f)
         {
-            aliveEnemyCount = FindObjectsByType<EnemyHealth>().Length;
+            aliveEnemyCount = EnemyHealth.Active.Count;
             scanTimer = Mathf.Max(0.05f, scanInterval);
         }
 

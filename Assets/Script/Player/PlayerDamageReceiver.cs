@@ -10,7 +10,7 @@ public class PlayerDamageReceiver : MonoBehaviour, IDamageable
     [SerializeField] private PlayerAbilities playerAbilities;
 
     private Animator animator;
-    private int hurtFramesRemaining;
+    private HurtFlashTimer hurtFlash;
 
     private void Awake()
     {
@@ -18,35 +18,24 @@ public class PlayerDamageReceiver : MonoBehaviour, IDamageable
         playerAbilities ??= GetComponent<PlayerAbilities>();
         animator = GetComponent<Animator>();
         animator ??= GetComponentInChildren<Animator>();
+        hurtFlash = new HurtFlashTimer(animator, IsHurtParameter, HurtFrameDuration);
     }
 
     private void LateUpdate()
     {
-        if (hurtFramesRemaining <= 0)
-            return;
-
-        hurtFramesRemaining--;
-
-        if (hurtFramesRemaining == 0)
-            animator?.SetBool(IsHurtParameter, false);
+        hurtFlash.Tick();
     }
 
     public void TakeDamage(float amount)
     {
-        if (amount <= 0f)
+        if (amount <= 0f || !PlayerPersistenceManager.IsGameplayActive)
             return;
 
-        SetHurtAnimation(true);
-        hurtFramesRemaining = HurtFrameDuration;
+        hurtFlash.Trigger();
 
         if (playerAbilities != null && playerAbilities.TryConsumeShield())
             return;
 
         playerHealth?.TakeDamage(amount);
-    }
-
-    private void SetHurtAnimation(bool isHurt)
-    {
-        animator?.SetBool(IsHurtParameter, isHurt);
     }
 }

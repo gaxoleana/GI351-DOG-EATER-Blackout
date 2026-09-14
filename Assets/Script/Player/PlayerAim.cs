@@ -23,6 +23,9 @@ public class PlayerAim : MonoBehaviour
 
     private void Update()
     {
+        if (cam == null)
+            cam = Camera.main;
+
         AimAttackPointAtMouse();
     }
 

@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 
 public class PlayerPanic : MonoBehaviour
@@ -20,19 +21,14 @@ public class PlayerPanic : MonoBehaviour
 
     private void Awake()
     {
-        if (cameraShake == null && Camera.main != null)
-        {
-            cameraShake = Camera.main.GetComponent<PanicCameraShake>();
-
-            if (cameraShake == null)
-                cameraShake = Camera.main.gameObject.AddComponent<PanicCameraShake>();
-        }
-
-
+        ResolveCameraShake();
     }
 
     private void Update()
     {
+        if (cameraShake == null)
+            ResolveCameraShake();
+
         scanTimer -= Time.deltaTime;
 
         if (scanTimer <= 0f)
@@ -54,7 +50,7 @@ public class PlayerPanic : MonoBehaviour
     {
         float nearestDistanceSquared = float.MaxValue;
         int nearbyEnemyCount = 0;
-        EnemyAI[] enemies = FindObjectsByType<EnemyAI>();
+        IReadOnlyList<EnemyAI> enemies = EnemyAI.Active;
 
         foreach (EnemyAI enemy in enemies)
         {
@@ -88,5 +84,16 @@ public class PlayerPanic : MonoBehaviour
     private void OnDisable()
     {
         cameraShake?.SetIntensity(0f);
+    }
+
+    private void ResolveCameraShake()
+    {
+        if (Camera.main == null)
+            return;
+
+        cameraShake = Camera.main.GetComponent<PanicCameraShake>();
+
+        if (cameraShake == null)
+            cameraShake = Camera.main.gameObject.AddComponent<PanicCameraShake>();
     }
 }

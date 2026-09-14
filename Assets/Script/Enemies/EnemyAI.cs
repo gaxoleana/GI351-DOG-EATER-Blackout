@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 
 public class EnemyAI : RoamingEnemyBase
@@ -7,6 +8,8 @@ public class EnemyAI : RoamingEnemyBase
     private const string IsWalkingParameter = "isWalk";
     private const string IsAttackParameter = "isAttack";
     private const string AttackStateName = "rat-attack";
+
+    private static readonly List<EnemyAI> active = new();
 
     [Header("Attack")]
     [SerializeField] private float attackRange = 1.2f;
@@ -23,6 +26,9 @@ public class EnemyAI : RoamingEnemyBase
     private float attackDamageTimer;
     private bool attackDamagePending;
 
+    // Lets PlayerPanic read nearby enemies without scanning the scene every frame.
+    public static IReadOnlyList<EnemyAI> Active => active;
+
     protected override void Awake()
     {
         base.Awake();
@@ -33,6 +39,16 @@ public class EnemyAI : RoamingEnemyBase
             playerDamageable = playerTransform.GetComponent<PlayerDamageReceiver>();
             playerDamageable ??= playerTransform.GetComponent<PlayerHealth>();
         }
+    }
+
+    private void OnEnable()
+    {
+        active.Add(this);
+    }
+
+    private void OnDisable()
+    {
+        active.Remove(this);
     }
 
     private void Update()

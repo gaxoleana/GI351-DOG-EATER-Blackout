@@ -83,8 +83,17 @@ public class PlayerAbilities : MonoBehaviour
         EndShield();
     }
 
+    public void EnableInputActions()
+    {
+        rechargeAction?.Enable();
+        shieldAction?.Enable();
+    }
+
     private void Update()
     {
+        if (!PlayerPersistenceManager.IsGameplayActive)
+            return;
+
         if (isRecharging && playerSanity != null)
             playerSanity.Charge(Time.deltaTime);
         else if (playerSanity != null)

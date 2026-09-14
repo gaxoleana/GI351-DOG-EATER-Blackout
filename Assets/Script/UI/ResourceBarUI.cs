@@ -30,7 +30,41 @@ public class ResourceBarUI : MonoBehaviour
 
     private void Start()
     {
+        RebindPersistentPlayerResource();
         RefreshDisplay();
+    }
+
+    private void RebindPersistentPlayerResource()
+    {
+        if (PlayerPersistenceManager.PersistentPlayer == null)
+            return;
+
+        System.Type resourceType = resourceSource != null
+            ? resourceSource.GetType()
+            : label.ToUpperInvariant() switch
+            {
+                "HP" => typeof(PlayerHealth),
+                "SANITY" => typeof(PlayerSanity),
+                _ => null
+            };
+
+        if (resourceType == null)
+            return;
+
+        MonoBehaviour persistentResource =
+            PlayerPersistenceManager.PersistentPlayer.GetComponent(resourceType) as MonoBehaviour;
+
+        if (persistentResource == null || persistentResource == resourceSource)
+            return;
+
+        if (resourceStat != null)
+            resourceStat.OnChanged -= HandleResourceChanged;
+
+        resourceSource = persistentResource;
+        resourceStat = persistentResource as IResourceStat;
+
+        if (resourceStat != null)
+            resourceStat.OnChanged += HandleResourceChanged;
     }
 
     private void OnDisable()

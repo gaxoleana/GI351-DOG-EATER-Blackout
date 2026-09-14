@@ -5,12 +5,19 @@ public class ScenePortal : MonoBehaviour
 {
     [Header("Destination")]
     [SerializeField] private string targetSceneName;
+    [SerializeField] private GameObject playerPrefab;
+    [SerializeField] private Vector3 playerSpawnOffset = new(-2f, 0f, 0f);
 
     private bool hasTriggered;
 
     private void Awake()
     {
         GetComponent<Collider>().isTrigger = true;
+        PlayerPersistenceManager.EnsurePlayer(
+            playerPrefab,
+            transform.position + playerSpawnOffset,
+            transform.rotation
+        );
     }
 
     private void OnTriggerEnter(Collider other)
