@@ -49,10 +49,24 @@ public class SceneTransitionManager : MonoBehaviour
         if (isTransitioning)
             return;
 
-        StartCoroutine(WarpRoutine(sceneName));
+        StartCoroutine(WarpRoutine(sceneName, false, Vector3.zero, Quaternion.identity));
     }
 
-    private IEnumerator WarpRoutine(string sceneName)
+    public void WarpTo(string sceneName, Vector3 spawnPosition, Quaternion spawnRotation)
+    {
+        if (isTransitioning)
+            return;
+
+        PlayerPersistenceManager.SetRespawnPoint(sceneName, spawnPosition, spawnRotation);
+        StartCoroutine(WarpRoutine(sceneName, true, spawnPosition, spawnRotation));
+    }
+
+    private IEnumerator WarpRoutine(
+        string sceneName,
+        bool hasCustomSpawnPoint,
+        Vector3 spawnPosition,
+        Quaternion spawnRotation
+    )
     {
         isTransitioning = true;
         SetFadeBlocking(true);
@@ -67,6 +81,16 @@ public class SceneTransitionManager : MonoBehaviour
 
         while (!loadOperation.isDone)
             yield return null;
+
+        if (hasCustomSpawnPoint)
+        {
+            yield return null;
+            PlayerPersistenceManager.MovePersistentPlayerTo(
+                spawnPosition,
+                spawnRotation,
+                false
+            );
+        }
 
         yield return Fade(1f, 0f, fadeInDuration);
 

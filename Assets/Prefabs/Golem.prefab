@@ -162,6 +162,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::EnemyHealth
   maxHealth: 100
+  fragmentPrefab: {fileID: 5020714297648912693, guid: 98d18f64f0b48fc44afd2e2d0d88282d, type: 3}
+  fragmentDropChance: 0.6
+  fragmentAmount: 1
 --- !u!114 &2042642606685252029
 MonoBehaviour:
   m_ObjectHideFlags: 0

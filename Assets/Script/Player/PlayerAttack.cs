@@ -20,6 +20,7 @@ public class PlayerAttack : MonoBehaviour
     [SerializeField, Range(0f, 100f)] private float sanityCostPercent = 15f;
 
     private InputAction attackAction;
+    private PlayerUpgradeSystem upgradeSystem;
     private float nextFireTime;
 
     private void Awake()
@@ -28,6 +29,8 @@ public class PlayerAttack : MonoBehaviour
 
         if (attackPoint == null)
             attackPoint = transform;
+
+        upgradeSystem = GetComponent<PlayerUpgradeSystem>();
     }
 
     private void OnEnable()
@@ -62,7 +65,12 @@ public class PlayerAttack : MonoBehaviour
             || attackPoint == null)
             return;
 
-        if (playerSanity == null || !playerSanity.TrySpendPercent(sanityCostPercent))
+        upgradeSystem ??= GetComponent<PlayerUpgradeSystem>();
+        float laserCostPercent = upgradeSystem != null
+            ? upgradeSystem.GetLaserCostPercent(sanityCostPercent)
+            : sanityCostPercent;
+
+        if (playerSanity == null || !playerSanity.TrySpendPercent(laserCostPercent))
             return;
 
         GameObject projectileObject = Instantiate(
@@ -86,6 +94,9 @@ public class PlayerAttack : MonoBehaviour
             gameObject
         );
 
-        nextFireTime = Time.time + fireCooldown;
+        float cooldown = upgradeSystem != null
+            ? upgradeSystem.GetLaserCooldown(fireCooldown)
+            : fireCooldown;
+        nextFireTime = Time.time + cooldown;
     }
 }

@@ -114,11 +114,15 @@ public class PlayerController : MonoBehaviour
 
     public void ResetControlState()
     {
+        rb ??= GetComponent<Rigidbody>();
+
         stunTimer = 0f;
         moveDir = Vector3.zero;
         isSprinting = false;
         speedModifier = 1f;
-        rb.linearVelocity = Vector3.zero;
+        if (rb != null)
+            rb.linearVelocity = Vector3.zero;
+
         animator?.SetBool(IsStunnedParameter, false);
     }
 

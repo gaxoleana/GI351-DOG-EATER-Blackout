@@ -8,6 +8,12 @@ public class ScenePortal : MonoBehaviour
     [SerializeField] private GameObject playerPrefab;
     [SerializeField] private Vector3 playerSpawnOffset = new(-2f, 0f, 0f);
 
+    [Header("Custom Destination Spawn")]
+    [Tooltip("ใช้พิกัดแบบ world-space ของฉากปลายทางแทนตำแหน่ง Portal ในฉากปลายทาง")]
+    [SerializeField] private bool useCustomSpawnPoint;
+    [SerializeField] private Vector3 destinationSpawnPosition;
+    [SerializeField] private Vector3 destinationSpawnEulerAngles;
+
     private bool hasTriggered;
 
     private void Awake()
@@ -38,6 +44,18 @@ public class ScenePortal : MonoBehaviour
         }
 
         hasTriggered = true;
-        SceneTransitionManager.Instance.WarpTo(targetSceneName);
+
+        if (useCustomSpawnPoint)
+        {
+            SceneTransitionManager.Instance.WarpTo(
+                targetSceneName,
+                destinationSpawnPosition,
+                Quaternion.Euler(destinationSpawnEulerAngles)
+            );
+        }
+        else
+        {
+            SceneTransitionManager.Instance.WarpTo(targetSceneName);
+        }
     }
 }

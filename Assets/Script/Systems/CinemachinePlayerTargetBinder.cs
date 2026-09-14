@@ -56,7 +56,7 @@ public class CinemachinePlayerTargetBinder : MonoBehaviour
             return;
         }
 
-        CinemachineCamera[] cameras = FindObjectsByType<CinemachineCamera>(FindObjectsSortMode.None);
+        CinemachineCamera[] cameras = FindObjectsByType<CinemachineCamera>();
         foreach (CinemachineCamera camera in cameras)
         {
             CameraTarget target = camera.Target;

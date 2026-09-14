@@ -8,6 +8,7 @@ public class PlayerSanity : MonoBehaviour, IResourceStat
     [SerializeField] private float rechargePerSecond = 15f;
 
     private float currentSanity;
+    private PlayerUpgradeSystem upgradeSystem;
 
     public event Action<float, float> OnSanityChanged;
 
@@ -56,7 +57,12 @@ public class PlayerSanity : MonoBehaviour, IResourceStat
         if (currentSanity >= maxSanity)
             return;
 
-        currentSanity = Mathf.Min(currentSanity + rechargePerSecond * deltaTime, maxSanity);
+        upgradeSystem ??= GetComponent<PlayerUpgradeSystem>();
+        float rechargeMultiplier = upgradeSystem?.GetSanityRechargeMultiplier() ?? 1f;
+        currentSanity = Mathf.Min(
+            currentSanity + rechargePerSecond * rechargeMultiplier * deltaTime,
+            maxSanity
+        );
         NotifySanityChanged();
     }
 
@@ -65,7 +71,12 @@ public class PlayerSanity : MonoBehaviour, IResourceStat
         if (deltaTime <= 0f || currentSanity >= maxSanity)
             return;
 
-        currentSanity = Mathf.Min(currentSanity + rechargePerSecond * deltaTime, maxSanity);
+        upgradeSystem ??= GetComponent<PlayerUpgradeSystem>();
+        float rechargeMultiplier = upgradeSystem?.GetSanityRechargeMultiplier() ?? 1f;
+        currentSanity = Mathf.Min(
+            currentSanity + rechargePerSecond * rechargeMultiplier * deltaTime,
+            maxSanity
+        );
         NotifySanityChanged();
     }
 

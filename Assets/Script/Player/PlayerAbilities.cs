@@ -27,6 +27,7 @@ public class PlayerAbilities : MonoBehaviour
 
     private InputAction rechargeAction;
     private InputAction shieldAction;
+    private PlayerUpgradeSystem upgradeSystem;
     private SpriteRenderer shieldRenderer;
     private bool isRecharging;
     private bool isShielding;
@@ -40,6 +41,7 @@ public class PlayerAbilities : MonoBehaviour
 
         playerSanity ??= GetComponent<PlayerSanity>();
         playerController ??= GetComponent<PlayerController>();
+        upgradeSystem = GetComponent<PlayerUpgradeSystem>();
 
         if (shieldVisual != null)
             shieldRenderer = shieldVisual.GetComponentInChildren<SpriteRenderer>();
@@ -94,10 +96,20 @@ public class PlayerAbilities : MonoBehaviour
         if (!PlayerPersistenceManager.IsGameplayActive)
             return;
 
+        upgradeSystem ??= GetComponent<PlayerUpgradeSystem>();
+
         if (isRecharging && playerSanity != null)
             playerSanity.Charge(Time.deltaTime);
         else if (playerSanity != null)
-            playerSanity.ReducePercent(sanityDrainPercentPerSecond, Time.deltaTime);
+        {
+            float drainPercent = upgradeSystem != null
+                ? upgradeSystem.GetSanityDrainPercent(sanityDrainPercentPerSecond)
+                : sanityDrainPercentPerSecond;
+            playerSanity.ReducePercent(drainPercent, Time.deltaTime);
+        }
+
+        if (isShielding && (playerSanity == null || !playerSanity.HasSanity))
+            EndShield();
 
         UpdateMovementSpeed();
     }
@@ -122,11 +134,14 @@ public class PlayerAbilities : MonoBehaviour
 
     private void BeginShield()
     {
-        if (isShielding)
+        if (isShielding || playerSanity == null || !playerSanity.HasSanity)
             return;
 
         isShielding = true;
-        playerController?.SetSpeedModifier(shieldSpeedMultiplier);
+        float speedMultiplier = upgradeSystem != null
+            ? upgradeSystem.GetShieldSpeedMultiplier(shieldSpeedMultiplier)
+            : shieldSpeedMultiplier;
+        playerController?.SetSpeedModifier(speedMultiplier);
         SetShieldVisible(true);
     }
 
@@ -146,7 +161,11 @@ public class PlayerAbilities : MonoBehaviour
         if (!IsShielding || playerSanity == null || !playerSanity.HasSanity)
             return false;
 
-        playerSanity.ReducePercent(hitSanityCostPercent, 1f);
+        upgradeSystem ??= GetComponent<PlayerUpgradeSystem>();
+        float hitCostPercent = upgradeSystem != null
+            ? upgradeSystem.GetShieldHitCostPercent(hitSanityCostPercent)
+            : hitSanityCostPercent;
+        playerSanity.ReducePercent(hitCostPercent, 1f);
 
         if (!playerSanity.HasSanity)
             EndShield();
@@ -159,11 +178,23 @@ public class PlayerAbilities : MonoBehaviour
         if (playerController == null)
             return;
 
-        float multiplier = isShielding
-            ? shieldSpeedMultiplier
-            : playerSanity != null && playerSanity.HasSanity
-                ? sanityRunSpeedMultiplier
-                : 1f;
+        float multiplier;
+        if (isShielding)
+        {
+            multiplier = upgradeSystem != null
+                ? upgradeSystem.GetShieldSpeedMultiplier(shieldSpeedMultiplier)
+                : shieldSpeedMultiplier;
+        }
+        else if (playerSanity != null && playerSanity.HasSanity)
+        {
+            multiplier = upgradeSystem != null
+                ? upgradeSystem.GetSanityRunSpeedMultiplier(sanityRunSpeedMultiplier)
+                : sanityRunSpeedMultiplier;
+        }
+        else
+        {
+            multiplier = 1f;
+        }
 
         playerController.SetSpeedModifier(multiplier);
     }

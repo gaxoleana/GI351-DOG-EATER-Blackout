@@ -9,10 +9,16 @@ public class WorldStability : MonoBehaviour, IResourceStat
     [SerializeField] private float stabilityGainOnKill = 5f;
     [SerializeField] private float scanInterval = 0.25f;
 
+    [Header("Passive Decay")]
+    [Tooltip("Stability lost per real second that passes while this world's scene is unloaded " +
+             "(e.g. player is in the Hub or inside another mirror world).")]
+    [SerializeField] private float passiveDecayPerSecond = 0.5f;
+
     private float currentStability;
     private float scanTimer;
     private int aliveEnemyCount;
     private bool isDepleted;
+    private string sceneName;
 
     public event Action<float, float> OnStabilityChanged;
     public event Action StabilityDepleted;
@@ -35,7 +41,17 @@ public class WorldStability : MonoBehaviour, IResourceStat
 
     private void Awake()
     {
-        currentStability = Mathf.Max(maxStability, 0f);
+        sceneName = gameObject.scene.name;
+        maxStability = Mathf.Max(maxStability, 0f);
+
+        currentStability = MirrorWorldRegistry.TryResolve(
+            sceneName,
+            passiveDecayPerSecond,
+            maxStability,
+            out float resolvedStability
+        )
+            ? resolvedStability
+            : maxStability;
     }
 
     private void OnEnable()
@@ -48,9 +64,21 @@ public class WorldStability : MonoBehaviour, IResourceStat
         EnemyHealth.AnyEnemyDied -= HandleEnemyDied;
     }
 
+    private void OnDestroy()
+    {
+        // Persist wherever we ended up so the next time this scene loads (or is checked
+        // passively) picks up decay from here, not from a fresh maxStability.
+        MirrorWorldRegistry.Save(sceneName, currentStability);
+    }
+
     private void Start()
     {
         NotifyStabilityChanged();
+
+        // Covers the case where passive decay already brought this world to 0 before we
+        // even loaded it — without this, a world that "died" offline would never fire
+        // StabilityDepleted, since Update() below exits early once currentStability <= 0.
+        CheckDepleted();
     }
 
     private void Update()
@@ -71,11 +99,7 @@ public class WorldStability : MonoBehaviour, IResourceStat
         );
         NotifyStabilityChanged();
 
-        if (currentStability <= 0f && !isDepleted)
-        {
-            isDepleted = true;
-            StabilityDepleted?.Invoke();
-        }
+        CheckDepleted();
     }
 
     public void Restore(float amount)
@@ -97,6 +121,15 @@ public class WorldStability : MonoBehaviour, IResourceStat
     private void NotifyStabilityChanged()
     {
         OnStabilityChanged?.Invoke(currentStability, maxStability);
+    }
+
+    private void CheckDepleted()
+    {
+        if (currentStability <= 0f && !isDepleted)
+        {
+            isDepleted = true;
+            StabilityDepleted?.Invoke();
+        }
     }
 
     private void HandleEnemyDied(EnemyHealth enemy)

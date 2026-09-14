@@ -14,6 +14,12 @@ public class PlayerHealth : HealthBase
         NotifyHealthChanged();
     }
 
+    public void ResetHealth()
+    {
+        currentHealth = MaxHealth;
+        NotifyHealthChanged();
+    }
+
     protected override void OnDied()
     {
         Died?.Invoke(this);

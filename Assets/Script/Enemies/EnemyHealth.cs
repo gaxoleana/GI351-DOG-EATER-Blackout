@@ -9,6 +9,11 @@ public class EnemyHealth : HealthBase
 
     private static readonly List<EnemyHealth> active = new();
 
+    [Header("Fragment Drop")]
+    [SerializeField] private GameObject fragmentPrefab;
+    [SerializeField, Range(0f, 1f)] private float fragmentDropChance = 0.6f;
+    [SerializeField, Min(1)] private int fragmentAmount = 1;
+
     private Animator animator;
     private HurtFlashTimer hurtFlash;
 
@@ -51,7 +56,24 @@ public class EnemyHealth : HealthBase
 
     protected override void OnDied()
     {
+        TryDropFragment();
         AnyEnemyDied?.Invoke(this);
         Destroy(gameObject);
+    }
+
+    private void TryDropFragment()
+    {
+        if (fragmentPrefab == null || UnityEngine.Random.value >= fragmentDropChance)
+            return;
+
+        GameObject fragmentObject = Instantiate(
+            fragmentPrefab,
+            transform.position + new Vector3(0, 0.5f, 0),
+            Quaternion.identity
+        );
+
+        FragmentPickup pickup = fragmentObject.GetComponent<FragmentPickup>();
+        if (pickup != null)
+            pickup.SetAmount(fragmentAmount);
     }
 }

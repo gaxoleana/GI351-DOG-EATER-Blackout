@@ -10,7 +10,6 @@ public class LevelFailureManager : MonoBehaviour
     private WorldStability worldStability;
     private CanvasGroup failureCanvasGroup;
     private bool hasFailed;
-    private static float? pendingStability;
 
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
     private static void CreateInstance()
@@ -56,9 +55,6 @@ public class LevelFailureManager : MonoBehaviour
         hasFailed = false;
         SetFailureVisible(false);
         RegisterFailureSources();
-
-        if (pendingStability.HasValue)
-            StartCoroutine(RestoreStabilityAfterSceneLoad());
     }
 
     private void RegisterFailureSources()
@@ -111,26 +107,11 @@ public class LevelFailureManager : MonoBehaviour
 
     private void RestartLevel()
     {
-        if (worldStability != null)
-            pendingStability = worldStability.CurrentStability;
-
+        playerHealth?.ResetHealth();
         Time.timeScale = 1f;
-        SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
-    }
-
-    private IEnumerator RestoreStabilityAfterSceneLoad()
-    {
-        yield return null;
-
-        WorldStability loadedWorldStability = FindAnyObjectByType<WorldStability>();
-        if (loadedWorldStability == null)
-        {
-            Debug.LogWarning("Could not restore Stability because the new scene has no WorldStability.", this);
-            yield break;
-        }
-
-        loadedWorldStability.SetStability(pendingStability.Value);
-        pendingStability = null;
+        PlayerPersistenceManager.RespawnPersistentPlayer();
+        hasFailed = false;
+        SetFailureVisible(false);
     }
 
     private void DisablePlayerActions()

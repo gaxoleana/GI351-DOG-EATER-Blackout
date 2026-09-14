@@ -516,6 +516,17 @@
                 },
                 {
                     "name": "",
+                    "id": "8e5e7388-d858-4dc9-9c78-e9d2b4d2355d",
+                    "path": "<Mouse>/rightButton",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "Recharge",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
                     "id": "0b78e828-9ecb-4348-b292-0dd597bb821b",
                     "path": "<Keyboard>/f",
                     "interactions": "",

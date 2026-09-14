@@ -206,6 +206,7 @@ GameObject:
   - component: {fileID: 5823235679731247633}
   - component: {fileID: 9039991710811200845}
   - component: {fileID: 8479618320887007529}
+  - component: {fileID: 2296495559912912152}
   m_Layer: 0
   m_Name: Player
   m_TagString: Player
@@ -433,6 +434,7 @@ MonoBehaviour:
   decayPerEnemyPerSecond: 0.1
   stabilityGainOnKill: 5
   scanInterval: 0.25
+  passiveDecayPerSecond: 0.5
 --- !u!114 &8999723935620718330
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -510,6 +512,22 @@ Animator:
   m_AllowConstantClipSamplingOptimization: 1
   m_KeepAnimatorStateOnDisable: 0
   m_WriteDefaultValuesOnDisable: 0
+--- !u!114 &2296495559912912152
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5202239411335654116}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 739c747f9bca15a46b280e3b04c896ca, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PlayerUpgradeSystem
+  sanityChargeLevel: 0
+  sanityShieldLevel: 0
+  laserLevel: 0
+  sanityRunLevel: 0
 --- !u!1 &5689219864453799220
 GameObject:
   m_ObjectHideFlags: 0

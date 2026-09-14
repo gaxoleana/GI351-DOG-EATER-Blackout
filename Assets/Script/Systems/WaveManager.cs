@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using TMPro;
 using UnityEngine;
 
 public class WaveManager : MonoBehaviour
@@ -36,6 +37,12 @@ public class WaveManager : MonoBehaviour
     [SerializeField, Min(0f)] private float delayBetweenWaves = 2f;
     [SerializeField] private bool startOnAwake = true;
 
+    [Header("UI")]
+    [SerializeField] private TMP_Text waveText;
+    [SerializeField] private TMP_Text remainingEnemyText;
+    [SerializeField] private string waveFormat = "WAVE {0}/{1}";
+    [SerializeField] private string remainingEnemyFormat = "REMAINING ENEMY: {0}";
+
     [Header("Gate")]
     [Tooltip("Disabled until every configured wave is cleared.")]
     [SerializeField] private GameObject gate;
@@ -44,6 +51,9 @@ public class WaveManager : MonoBehaviour
     private int currentWaveIndex = -1;
     private bool isRunning;
     private bool isComplete;
+    private int displayedWaveNumber = int.MinValue;
+    private int displayedWaveCount = int.MinValue;
+    private int displayedAliveEnemyCount = int.MinValue;
 
     public event Action<int, int> WaveStarted;
     public event Action<int, int> WaveCleared;
@@ -62,6 +72,8 @@ public class WaveManager : MonoBehaviour
 
     private void Start()
     {
+        UpdateUI(true);
+
         if (startOnAwake)
             BeginWaves();
     }
@@ -73,6 +85,8 @@ public class WaveManager : MonoBehaviour
             if (aliveEnemies[index] == null)
                 aliveEnemies.RemoveAt(index);
         }
+
+        UpdateUI();
     }
 
     public void BeginWaves()
@@ -86,6 +100,7 @@ public class WaveManager : MonoBehaviour
             return;
         }
 
+        UpdateUI(true);
         StartCoroutine(RunWaves());
     }
 
@@ -106,9 +121,11 @@ public class WaveManager : MonoBehaviour
             }
 
             WaveStarted?.Invoke(CurrentWaveNumber, WaveCount);
+            UpdateUI(true);
             yield return SpawnWave(wave);
             yield return new WaitUntil(() => aliveEnemies.Count == 0);
             WaveCleared?.Invoke(CurrentWaveNumber, WaveCount);
+            UpdateUI(true);
 
             if (currentWaveIndex < waves.Length - 1 && delayBetweenWaves > 0f)
                 yield return new WaitForSeconds(delayBetweenWaves);
@@ -138,10 +155,32 @@ public class WaveManager : MonoBehaviour
                 spawnPoint != null ? spawnPoint.rotation : transform.rotation
             );
             aliveEnemies.Add(enemy);
+            UpdateUI(true);
 
             if (wave.SpawnInterval > 0f && enemyIndex < wave.EnemyCount - 1)
                 yield return new WaitForSeconds(wave.SpawnInterval);
         }
+    }
+
+    private void UpdateUI(bool force = false)
+    {
+        int waveNumber = CurrentWaveNumber;
+        int waveCount = WaveCount;
+        int aliveEnemyCount = AliveEnemyCount;
+
+        if (!force && waveNumber == displayedWaveNumber &&
+            waveCount == displayedWaveCount && aliveEnemyCount == displayedAliveEnemyCount)
+            return;
+
+        displayedWaveNumber = waveNumber;
+        displayedWaveCount = waveCount;
+        displayedAliveEnemyCount = aliveEnemyCount;
+
+        if (waveText != null)
+            waveText.text = string.Format(waveFormat, waveNumber, waveCount);
+
+        if (remainingEnemyText != null)
+            remainingEnemyText.text = string.Format(remainingEnemyFormat, aliveEnemyCount);
     }
 
     private static bool HasSpawnableEnemy(WaveDefinition wave)

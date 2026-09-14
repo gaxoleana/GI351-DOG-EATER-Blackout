@@ -9,6 +9,11 @@ public class PlayerPersistenceManager : MonoBehaviour
     private static PlayerPersistenceManager instance;
     private GameObject persistentPlayer;
     private GameObject playerPrefab;
+    private ulong lastEnsuredSceneHandle = ulong.MaxValue;
+    private bool hasRespawnPoint;
+    private string respawnSceneName;
+    private Vector3 respawnPosition;
+    private Quaternion respawnRotation;
 
     public static bool IsGameplayActive { get; private set; }
     public static GameObject PersistentPlayer => instance != null ? instance.persistentPlayer : null;
@@ -44,6 +49,11 @@ public class PlayerPersistenceManager : MonoBehaviour
         if (instance == null)
             CreateInstance();
 
+        Scene activeScene = SceneManager.GetActiveScene();
+        ulong sceneHandle = activeScene.handle.GetRawData();
+        bool isFirstEnsureInScene = instance.lastEnsuredSceneHandle != sceneHandle;
+        bool isHubScene = activeScene.name == HubSceneName;
+
         instance.playerPrefab ??= prefab;
 
         if (instance.persistentPlayer == null)
@@ -57,8 +67,8 @@ public class PlayerPersistenceManager : MonoBehaviour
             {
                 instance.persistentPlayer = Instantiate(
                     instance.playerPrefab,
-                    spawnPosition,
-                    spawnRotation
+                    isHubScene ? Vector3.zero : spawnPosition,
+                    isHubScene ? Quaternion.identity : spawnRotation
                 );
             }
             else
@@ -70,26 +80,88 @@ public class PlayerPersistenceManager : MonoBehaviour
             instance.persistentPlayer.name = "PersistentPlayer";
             DontDestroyOnLoad(instance.persistentPlayer);
         }
-        else
+        else if (isFirstEnsureInScene)
         {
-            // Player already exists from a previous scene - move it to this scene's portal instead of leaving it at its old position.
-            instance.MovePersistentPlayerTo(spawnPosition, spawnRotation);
+            instance.MovePersistentPlayer(
+                isHubScene ? Vector3.zero : spawnPosition,
+                isHubScene ? Quaternion.identity : spawnRotation,
+                !isHubScene
+            );
         }
 
-        instance.SetGameplayState(SceneManager.GetActiveScene());
+        instance.EnsureFragmentCurrency();
+        instance.EnsureUpgradeSystem();
+        instance.lastEnsuredSceneHandle = sceneHandle;
+        instance.SetGameplayState(activeScene);
     }
 
-    private void MovePersistentPlayerTo(Vector3 position, Quaternion rotation)
+    private void EnsureFragmentCurrency()
+    {
+        if (persistentPlayer != null && persistentPlayer.GetComponent<FragmentCurrency>() == null)
+            persistentPlayer.AddComponent<FragmentCurrency>();
+    }
+
+    private void EnsureUpgradeSystem()
+    {
+        if (persistentPlayer != null && persistentPlayer.GetComponent<PlayerUpgradeSystem>() == null)
+            persistentPlayer.AddComponent<PlayerUpgradeSystem>();
+    }
+
+    public static void SetRespawnPoint(
+        string sceneName,
+        Vector3 position,
+        Quaternion rotation
+    )
+    {
+        if (instance == null)
+            CreateInstance();
+
+        instance.hasRespawnPoint = true;
+        instance.respawnSceneName = sceneName;
+        instance.respawnPosition = position;
+        instance.respawnRotation = rotation;
+    }
+
+    public static void RespawnPersistentPlayer()
+    {
+        if (instance == null || instance.persistentPlayer == null)
+            return;
+
+        Scene activeScene = SceneManager.GetActiveScene();
+        if (instance.hasRespawnPoint && activeScene.name == instance.respawnSceneName)
+        {
+            instance.MovePersistentPlayer(
+                instance.respawnPosition,
+                instance.respawnRotation,
+                false
+            );
+        }
+
+        instance.EnablePersistentPlayerComponents();
+    }
+
+    public static void MovePersistentPlayerTo(
+        Vector3 position,
+        Quaternion rotation,
+        bool preserveCurrentY = true
+    )
+    {
+        if (instance == null)
+            return;
+
+        instance.MovePersistentPlayer(position, rotation, preserveCurrentY);
+    }
+
+    private void MovePersistentPlayer(Vector3 position, Quaternion rotation, bool preserveCurrentY)
     {
         if (persistentPlayer == null)
             return;
 
         Vector3 before = persistentPlayer.transform.position;
 
-        // Portals are placed at the sprite/pivot height, not the floor height, so only teleport
-        // the horizontal position and keep the player's current (already grounded) Y - otherwise
-        // the player can land inside a wall/ceiling at the portal's height and look "stuck".
-        Vector3 target = new(position.x, before.y, position.z);
+        Vector3 target = preserveCurrentY
+            ? new(position.x, before.y, position.z)
+            : position;
 
         Rigidbody rb = persistentPlayer.GetComponent<Rigidbody>();
         if (rb != null)
