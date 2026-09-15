@@ -11,13 +11,24 @@ public enum PlayerUpgradeNode
 
 public class PlayerUpgradeSystem : MonoBehaviour
 {
-    private const long UpgradeCost = 1;
+    [Header("Upgrade Cost")]
+    [SerializeField, Min(1)] private long upgradeCost = 1;
 
     [Header("Upgrade Levels")]
     [SerializeField, Min(0)] private int sanityChargeLevel;
     [SerializeField, Min(0)] private int sanityShieldLevel;
     [SerializeField, Min(0)] private int laserLevel;
     [SerializeField, Min(0)] private int sanityRunLevel;
+
+    [Header("Per-Level Effects")]
+    [SerializeField, Min(0f)] private float sanityRechargeBonusPerLevel = 0.05f;
+    [SerializeField, Min(0f)] private float sanityDrainReductionPerLevel = 0.1f;
+    [SerializeField, Min(0f)] private float shieldSpeedBonusPerLevel = 0.025f;
+    [SerializeField, Min(0f)] private float shieldHitCostReductionPerLevel = 1f;
+    [SerializeField, Min(0f)] private float laserCostReductionPerLevel = 0.5f;
+    [SerializeField, Min(0f)] private float laserCooldownReductionPerLevel = 0.05f;
+    [SerializeField, Min(0.01f)] private float minimumLaserCooldown = 0.05f;
+    [SerializeField, Min(0f)] private float sanityRunSpeedBonusPerLevel = 0.015f;
 
     private FragmentCurrency currency;
 
@@ -27,6 +38,7 @@ public class PlayerUpgradeSystem : MonoBehaviour
     public int SanityShieldLevel => sanityShieldLevel;
     public int LaserLevel => laserLevel;
     public int SanityRunLevel => sanityRunLevel;
+    public long UpgradeCost => upgradeCost;
 
     private void Awake()
     {
@@ -48,7 +60,7 @@ public class PlayerUpgradeSystem : MonoBehaviour
     public bool TryUpgrade(PlayerUpgradeNode node)
     {
         currency ??= GetComponent<FragmentCurrency>();
-        if (currency == null || !currency.TrySpend(UpgradeCost))
+        if (currency == null || !currency.TrySpend(upgradeCost))
             return false;
 
         int level = GetLevel(node) + 1;
@@ -59,37 +71,37 @@ public class PlayerUpgradeSystem : MonoBehaviour
 
     public float GetSanityRechargeMultiplier()
     {
-        return 1f + sanityChargeLevel * 0.05f;
+        return 1f + sanityChargeLevel * sanityRechargeBonusPerLevel;
     }
 
     public float GetSanityDrainPercent(float basePercent)
     {
-        return Mathf.Max(0f, basePercent - sanityChargeLevel * 0.1f);
+        return Mathf.Max(0f, basePercent - sanityChargeLevel * sanityDrainReductionPerLevel);
     }
 
     public float GetShieldSpeedMultiplier(float baseMultiplier)
     {
-        return Mathf.Clamp01(baseMultiplier + sanityShieldLevel * 0.025f);
+        return Mathf.Clamp01(baseMultiplier + sanityShieldLevel * shieldSpeedBonusPerLevel);
     }
 
     public float GetShieldHitCostPercent(float basePercent)
     {
-        return Mathf.Max(0f, basePercent - sanityShieldLevel * 1f);
+        return Mathf.Max(0f, basePercent - sanityShieldLevel * shieldHitCostReductionPerLevel);
     }
 
     public float GetLaserCostPercent(float basePercent)
     {
-        return Mathf.Max(0f, basePercent - laserLevel * 0.5f);
+        return Mathf.Max(0f, basePercent - laserLevel * laserCostReductionPerLevel);
     }
 
     public float GetLaserCooldown(float baseCooldown)
     {
-        return Mathf.Max(0.05f, baseCooldown - laserLevel * 0.05f);
+        return Mathf.Max(minimumLaserCooldown, baseCooldown - laserLevel * laserCooldownReductionPerLevel);
     }
 
     public float GetSanityRunSpeedMultiplier(float baseMultiplier)
     {
-        return baseMultiplier * (1f + sanityRunLevel * 0.015f);
+        return baseMultiplier * (1f + sanityRunLevel * sanityRunSpeedBonusPerLevel);
     }
 
     private void SetLevel(PlayerUpgradeNode node, int level)

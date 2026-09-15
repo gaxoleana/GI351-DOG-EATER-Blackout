@@ -15,15 +15,38 @@ public class ScenePortal : MonoBehaviour
     [SerializeField] private Vector3 destinationSpawnEulerAngles;
 
     private bool hasTriggered;
+    private Collider portalCollider;
+    private StabilitySystem subscribedStabilitySystem;
+
+    public string TargetSceneName => targetSceneName;
 
     private void Awake()
     {
-        GetComponent<Collider>().isTrigger = true;
+        portalCollider = GetComponent<Collider>();
+        portalCollider.isTrigger = true;
         PlayerPersistenceManager.EnsurePlayer(
             playerPrefab,
             transform.position + playerSpawnOffset,
             transform.rotation
         );
+
+        RefreshAvailability();
+    }
+
+    private void OnEnable()
+    {
+        SubscribeToStabilitySystem();
+    }
+
+    private void Start()
+    {
+        SubscribeToStabilitySystem();
+        RefreshAvailability();
+    }
+
+    private void OnDisable()
+    {
+        UnsubscribeFromStabilitySystem();
     }
 
     private void OnTriggerEnter(Collider other)
@@ -43,6 +66,9 @@ public class ScenePortal : MonoBehaviour
             return;
         }
 
+        if (StabilitySystem.Instance != null && StabilitySystem.Instance.IsWorldBlackedOut(targetSceneName))
+            return;
+
         hasTriggered = true;
 
         if (useCustomSpawnPoint)
@@ -57,5 +83,43 @@ public class ScenePortal : MonoBehaviour
         {
             SceneTransitionManager.Instance.WarpTo(targetSceneName);
         }
+    }
+
+    private void HandleWorldDepleted(string depletedSceneName)
+    {
+        if (depletedSceneName == targetSceneName)
+            RefreshAvailability();
+    }
+
+    private void HandleWorldStabilityChanged(string changedSceneName, float current, float max)
+    {
+        if (changedSceneName == targetSceneName)
+            RefreshAvailability();
+    }
+
+    private void RefreshAvailability()
+    {
+        if (portalCollider != null && StabilitySystem.Instance != null)
+            portalCollider.enabled = !StabilitySystem.Instance.IsWorldBlackedOut(targetSceneName);
+    }
+
+    private void SubscribeToStabilitySystem()
+    {
+        if (subscribedStabilitySystem != null || StabilitySystem.Instance == null)
+            return;
+
+        subscribedStabilitySystem = StabilitySystem.Instance;
+        subscribedStabilitySystem.WorldDepleted += HandleWorldDepleted;
+        subscribedStabilitySystem.WorldStabilityChanged += HandleWorldStabilityChanged;
+    }
+
+    private void UnsubscribeFromStabilitySystem()
+    {
+        if (subscribedStabilitySystem == null)
+            return;
+
+        subscribedStabilitySystem.WorldDepleted -= HandleWorldDepleted;
+        subscribedStabilitySystem.WorldStabilityChanged -= HandleWorldStabilityChanged;
+        subscribedStabilitySystem = null;
     }
 }

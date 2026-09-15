@@ -36,6 +36,15 @@ public class ResourceBarUI : MonoBehaviour
 
     private void RebindPersistentPlayerResource()
     {
+        if (resourceSource == null && label.ToUpperInvariant() == "STABILITY")
+        {
+            StabilitySystem stabilitySystem = StabilitySystem.Instance;
+            if (stabilitySystem != null)
+                BindResource(stabilitySystem);
+
+            return;
+        }
+
         if (PlayerPersistenceManager.PersistentPlayer == null)
             return;
 
@@ -54,14 +63,19 @@ public class ResourceBarUI : MonoBehaviour
         MonoBehaviour persistentResource =
             PlayerPersistenceManager.PersistentPlayer.GetComponent(resourceType) as MonoBehaviour;
 
-        if (persistentResource == null || persistentResource == resourceSource)
+        BindResource(persistentResource);
+    }
+
+    private void BindResource(MonoBehaviour nextResource)
+    {
+        if (nextResource == null || nextResource == resourceSource)
             return;
 
         if (resourceStat != null)
             resourceStat.OnChanged -= HandleResourceChanged;
 
-        resourceSource = persistentResource;
-        resourceStat = persistentResource as IResourceStat;
+        resourceSource = nextResource;
+        resourceStat = nextResource as IResourceStat;
 
         if (resourceStat != null)
             resourceStat.OnChanged += HandleResourceChanged;

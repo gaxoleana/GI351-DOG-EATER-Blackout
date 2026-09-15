@@ -242,10 +242,6 @@ public class PlayerPersistenceManager : MonoBehaviour
             return;
 
         EnablePersistentPlayerComponents();
-
-        WorldStability stability = persistentPlayer.GetComponent<WorldStability>();
-        if (stability != null)
-            Destroy(stability);
     }
 
     private void EnablePersistentPlayerComponents()

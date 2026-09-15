@@ -7,7 +7,6 @@ public class EnemyAI : RoamingEnemyBase
 
     private const string IsWalkingParameter = "isWalk";
     private const string IsAttackParameter = "isAttack";
-    private const string AttackStateName = "rat-attack";
 
     private static readonly List<EnemyAI> active = new();
 
@@ -16,6 +15,7 @@ public class EnemyAI : RoamingEnemyBase
     [SerializeField] private float attackDamage = 10f;
     [SerializeField] private float attackCooldown = 1.5f;
     [SerializeField] private float attackAnimationDuration = 0.5f;
+    [SerializeField] private string attackStateName = "rat-attack";
 
     private Animator animator;
     private IDamageable playerDamageable;
@@ -121,7 +121,7 @@ public class EnemyAI : RoamingEnemyBase
         nextAttackTime = Time.time + attackCooldown;
 
         if (animator != null)
-            animator.CrossFadeInFixedTime(AttackStateName, 0.05f, 0, 0f);
+            animator.CrossFadeInFixedTime(attackStateName, 0.05f, 0, 0f);
     }
 
     private void OnDrawGizmosSelected()

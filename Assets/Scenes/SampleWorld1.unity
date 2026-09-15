@@ -2041,11 +2041,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8d2c4f6a1b3e5d7f9c0a2e4b6d8f1a3c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::WorldStability
-  maxStability: 100
   decayPerEnemyPerSecond: 0.1
   stabilityGainOnKill: 5
   scanInterval: 0.25
-  passiveDecayPerSecond: 0.5
 --- !u!4 &1067987496
 Transform:
   m_ObjectHideFlags: 0

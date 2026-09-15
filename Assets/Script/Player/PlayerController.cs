@@ -14,6 +14,7 @@ public class PlayerController : MonoBehaviour
     [Header("Movement")]
     [SerializeField] private float speed = 5.0f;
     [SerializeField] private float sprintSpeed = 10.0f;
+    [SerializeField, Range(0f, 1f)] private float rechargeSlowdownMultiplier = 0.85f;
 
     [Header("Input")]
     [SerializeField] private InputActionAsset inputActions;
@@ -183,7 +184,7 @@ public class PlayerController : MonoBehaviour
         }
 
         float activeSpeed = isSprinting ? sprintSpeed : speed;
-        float rechargePenaltyMultiplier = isRechargeSlowing ? 0.85f : 1f;
+        float rechargePenaltyMultiplier = isRechargeSlowing ? rechargeSlowdownMultiplier : 1f;
         float currentSpeed = activeSpeed * rechargePenaltyMultiplier * speedModifier;
 
         Vector3 movement = moveDir * currentSpeed * Time.fixedDeltaTime;

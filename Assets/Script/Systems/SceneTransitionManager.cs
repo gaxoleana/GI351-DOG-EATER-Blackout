@@ -77,6 +77,15 @@ public class SceneTransitionManager : MonoBehaviour
             yield return new WaitForSeconds(holdBlackDuration);
 
         AsyncOperation loadOperation = SceneManager.LoadSceneAsync(sceneName);
+        if (loadOperation == null)
+        {
+            Debug.LogError($"SceneTransitionManager could not load scene '{sceneName}'.", this);
+            yield return Fade(1f, 0f, fadeInDuration);
+            SetFadeBlocking(false);
+            isTransitioning = false;
+            yield break;
+        }
+
         loadOperation.allowSceneActivation = true;
 
         while (!loadOperation.isDone)

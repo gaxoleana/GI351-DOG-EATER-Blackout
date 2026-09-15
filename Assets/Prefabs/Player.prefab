@@ -201,12 +201,11 @@ GameObject:
   - component: {fileID: 2752444193231828804}
   - component: {fileID: 7037449820447932002}
   - component: {fileID: 6036379222282263168}
-  - component: {fileID: 1760815600049343860}
   - component: {fileID: 8999723935620718330}
   - component: {fileID: 5823235679731247633}
   - component: {fileID: 9039991710811200845}
-  - component: {fileID: 8479618320887007529}
   - component: {fileID: 2296495559912912152}
+  - component: {fileID: 8479618320887007529}
   m_Layer: 0
   m_Name: Player
   m_TagString: Player
@@ -356,6 +355,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::PlayerController
   speed: 5
   sprintSpeed: 10
+  rechargeSlowdownMultiplier: 0.85
   inputActions: {fileID: -944628639613478452, guid: 052faaac586de48259a63d0c4782560b, type: 3}
 --- !u!114 &1101659091197588921
 MonoBehaviour:
@@ -398,6 +398,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::PlayerDamageReceiver
   playerHealth: {fileID: 2752444193231828804}
   playerAbilities: {fileID: 6036379222282263168}
+  hurtFlashFrameDuration: 10
 --- !u!114 &6036379222282263168
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -418,23 +419,6 @@ MonoBehaviour:
   shieldSpeedMultiplier: 0.5
   sanityRunSpeedMultiplier: 1.1
   sanityDrainPercentPerSecond: 3
---- !u!114 &1760815600049343860
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 5202239411335654116}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 8d2c4f6a1b3e5d7f9c0a2e4b6d8f1a3c, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::WorldStability
-  maxStability: 100
-  decayPerEnemyPerSecond: 0.1
-  stabilityGainOnKill: 5
-  scanInterval: 0.25
-  passiveDecayPerSecond: 0.5
 --- !u!114 &8999723935620718330
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -469,6 +453,7 @@ MonoBehaviour:
   attackPoint: {fileID: 8491270736566949421}
   cam: {fileID: 0}
   rotationSpeed: 30
+  attackPointRotationOffset: -90
 --- !u!114 &9039991710811200845
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -490,6 +475,31 @@ MonoBehaviour:
   projectileLifetime: 2
   fireCooldown: 2
   sanityCostPercent: 15
+--- !u!114 &2296495559912912152
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5202239411335654116}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 739c747f9bca15a46b280e3b04c896ca, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PlayerUpgradeSystem
+  upgradeCost: 1
+  sanityChargeLevel: 0
+  sanityShieldLevel: 0
+  laserLevel: 0
+  sanityRunLevel: 0
+  sanityRechargeBonusPerLevel: 0.05
+  sanityDrainReductionPerLevel: 0.1
+  shieldSpeedBonusPerLevel: 0.025
+  shieldHitCostReductionPerLevel: 1
+  laserCostReductionPerLevel: 0.5
+  laserCooldownReductionPerLevel: 0.05
+  minimumLaserCooldown: 0.05
+  sanityRunSpeedBonusPerLevel: 0.015
 --- !u!95 &8479618320887007529
 Animator:
   serializedVersion: 7
@@ -512,22 +522,6 @@ Animator:
   m_AllowConstantClipSamplingOptimization: 1
   m_KeepAnimatorStateOnDisable: 0
   m_WriteDefaultValuesOnDisable: 0
---- !u!114 &2296495559912912152
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 5202239411335654116}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 739c747f9bca15a46b280e3b04c896ca, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::PlayerUpgradeSystem
-  sanityChargeLevel: 0
-  sanityShieldLevel: 0
-  laserLevel: 0
-  sanityRunLevel: 0
 --- !u!1 &5689219864453799220
 GameObject:
   m_ObjectHideFlags: 0

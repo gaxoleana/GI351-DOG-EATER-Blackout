@@ -1,4 +1,3 @@
-using System.Collections;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.SceneManagement;
@@ -7,24 +6,32 @@ using TMPro;
 public class LevelFailureManager : MonoBehaviour
 {
     private PlayerHealth playerHealth;
-    private WorldStability worldStability;
-    private CanvasGroup failureCanvasGroup;
+    private StabilitySystem stabilitySystem;
     private bool hasFailed;
+    private bool restartAsNewRun;
 
-    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
-    private static void CreateInstance()
-    {
-        if (FindAnyObjectByType<LevelFailureManager>() != null)
-            return;
-
-        GameObject managerObject = new("LevelFailureManager");
-        managerObject.AddComponent<LevelFailureManager>();
-    }
+    [Header("Custom Failure UI")]
+    [Tooltip("Required overlay CanvasGroup. Its root GameObject is kept across scene loads.")]
+    [SerializeField] private CanvasGroup failureCanvasGroup;
+    [Tooltip("Required handmade failure-message text element.")]
+    [SerializeField] private TextMeshProUGUI failureMessage;
 
     private void Awake()
     {
         DontDestroyOnLoad(gameObject);
-        CreateFailureOverlay();
+
+        if (failureCanvasGroup == null || failureMessage == null)
+        {
+            Debug.LogError(
+                "LevelFailureManager requires both a Failure Canvas Group and Failure Message reference.",
+                this
+            );
+            enabled = false;
+            return;
+        }
+
+        DontDestroyOnLoad(failureCanvasGroup.transform.root.gameObject);
+        SetFailureVisible(false);
     }
 
     private void OnEnable()
@@ -62,13 +69,13 @@ public class LevelFailureManager : MonoBehaviour
         UnregisterFailureSources();
 
         playerHealth = FindAnyObjectByType<PlayerHealth>();
-        worldStability = FindAnyObjectByType<WorldStability>();
+        stabilitySystem = StabilitySystem.Instance;
 
         if (playerHealth != null)
             playerHealth.Died += HandlePlayerDied;
 
-        if (worldStability != null)
-            worldStability.StabilityDepleted += HandleStabilityDepleted;
+        if (stabilitySystem != null)
+            stabilitySystem.TotalStabilityDepleted += HandleStabilityDepleted;
     }
 
     private void UnregisterFailureSources()
@@ -76,30 +83,31 @@ public class LevelFailureManager : MonoBehaviour
         if (playerHealth != null)
             playerHealth.Died -= HandlePlayerDied;
 
-        if (worldStability != null)
-            worldStability.StabilityDepleted -= HandleStabilityDepleted;
+        if (stabilitySystem != null)
+            stabilitySystem.TotalStabilityDepleted -= HandleStabilityDepleted;
 
         playerHealth = null;
-        worldStability = null;
+        stabilitySystem = null;
     }
 
     private void HandlePlayerDied(PlayerHealth player)
     {
-        FailLevel("YOU DIED");
+        restartAsNewRun = false;
+        FailLevel();
     }
 
     private void HandleStabilityDepleted()
     {
-        FailLevel("WORLD COLLAPSED");
+        restartAsNewRun = true;
+        FailLevel();
     }
 
-    private void FailLevel(string title)
+    private void FailLevel()
     {
         if (hasFailed)
             return;
 
         hasFailed = true;
-        SetFailureMessage(title);
         SetFailureVisible(true);
         DisablePlayerActions();
         Time.timeScale = 0f;
@@ -108,9 +116,13 @@ public class LevelFailureManager : MonoBehaviour
     private void RestartLevel()
     {
         playerHealth?.ResetHealth();
+        if (restartAsNewRun)
+            stabilitySystem?.ResetAllWorlds();
+
         Time.timeScale = 1f;
         PlayerPersistenceManager.RespawnPersistentPlayer();
         hasFailed = false;
+        restartAsNewRun = false;
         SetFailureVisible(false);
     }
 
@@ -126,44 +138,11 @@ public class LevelFailureManager : MonoBehaviour
             attack.enabled = false;
     }
 
-    private void CreateFailureOverlay()
-    {
-        GameObject canvasObject = new("LevelFailureCanvas");
-        canvasObject.transform.SetParent(transform, false);
-
-        Canvas canvas = canvasObject.AddComponent<Canvas>();
-        canvas.renderMode = RenderMode.ScreenSpaceOverlay;
-        canvas.sortingOrder = short.MaxValue;
-        canvasObject.AddComponent<UnityEngine.UI.CanvasScaler>();
-        failureCanvasGroup = canvasObject.AddComponent<CanvasGroup>();
-
-        GameObject messageObject = new("FailureMessage");
-        messageObject.transform.SetParent(canvasObject.transform, false);
-
-        RectTransform messageTransform = messageObject.AddComponent<RectTransform>();
-        messageTransform.anchorMin = Vector2.zero;
-        messageTransform.anchorMax = Vector2.one;
-        messageTransform.offsetMin = Vector2.zero;
-        messageTransform.offsetMax = Vector2.zero;
-
-        TextMeshProUGUI message = messageObject.AddComponent<TextMeshProUGUI>();
-        message.alignment = TextAlignmentOptions.Center;
-        message.fontSize = 48f;
-        message.color = Color.white;
-        message.text = "";
-
-        SetFailureVisible(false);
-    }
-
-    private void SetFailureMessage(string title)
-    {
-        TextMeshProUGUI message = failureCanvasGroup.GetComponentInChildren<TextMeshProUGUI>();
-        if (message != null)
-            message.text = $"{title}\n\nPRESS R TO RESTART";
-    }
-
     private void SetFailureVisible(bool isVisible)
     {
+        if (failureCanvasGroup == null)
+            return;
+
         failureCanvasGroup.alpha = isVisible ? 1f : 0f;
         failureCanvasGroup.blocksRaycasts = isVisible;
         failureCanvasGroup.interactable = isVisible;

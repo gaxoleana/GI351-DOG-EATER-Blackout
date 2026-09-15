@@ -4,7 +4,6 @@ using UnityEngine.InputSystem;
 public class PlayerAim : MonoBehaviour
 {
     private const float MinimumAimDistance = 0.0001f;
-    private const float AttackPointRotationOffset = -90f;
 
     [Header("References")]
     [SerializeField] private Transform attackPoint;
@@ -12,6 +11,7 @@ public class PlayerAim : MonoBehaviour
 
     [Header("Settings")]
     [SerializeField] private float rotationSpeed = 15f;
+    [SerializeField] private float attackPointRotationOffset = -90f;
 
     private Plane groundPlane;
 
@@ -51,7 +51,7 @@ public class PlayerAim : MonoBehaviour
             return;
 
         Quaternion targetRotation = Quaternion.LookRotation(directionToMouse, Vector3.up)
-                                   * Quaternion.Euler(0f, AttackPointRotationOffset, 0f);
+                                   * Quaternion.Euler(0f, attackPointRotationOffset, 0f);
 
         attackPoint.rotation = Quaternion.Slerp(
             attackPoint.rotation,

@@ -200,7 +200,7 @@ public class PlayerUpgradeUI : MonoBehaviour
 
     private void RefreshButtonState(long fragments)
     {
-        bool canUpgrade = fragments >= 1 && upgradeSystem != null;
+        bool canUpgrade = upgradeSystem != null && fragments >= upgradeSystem.UpgradeCost;
         if (sanityChargeButton != null)
             sanityChargeButton.interactable = canUpgrade;
         if (sanityShieldButton != null)

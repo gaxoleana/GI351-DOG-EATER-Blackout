@@ -3,11 +3,11 @@ using UnityEngine;
 public class PlayerDamageReceiver : MonoBehaviour, IDamageable
 {
     private const string IsHurtParameter = "isHurt";
-    private const int HurtFrameDuration = 10;
 
     [Header("References")]
     [SerializeField] private PlayerHealth playerHealth;
     [SerializeField] private PlayerAbilities playerAbilities;
+    [SerializeField, Min(1)] private int hurtFlashFrameDuration = 10;
 
     private Animator animator;
     private HurtFlashTimer hurtFlash;
@@ -18,7 +18,7 @@ public class PlayerDamageReceiver : MonoBehaviour, IDamageable
         playerAbilities ??= GetComponent<PlayerAbilities>();
         animator = GetComponent<Animator>();
         animator ??= GetComponentInChildren<Animator>();
-        hurtFlash = new HurtFlashTimer(animator, IsHurtParameter, HurtFrameDuration);
+        hurtFlash = new HurtFlashTimer(animator, IsHurtParameter, hurtFlashFrameDuration);
     }
 
     private void LateUpdate()

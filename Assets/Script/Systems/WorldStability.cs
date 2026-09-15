@@ -1,32 +1,27 @@
 using System;
+using System.Collections;
 using UnityEngine;
 
 public class WorldStability : MonoBehaviour, IResourceStat
 {
-    [Header("Stability")]
-    [SerializeField] private float maxStability = 100f;
+    [Header("World Combat Decay")]
     [SerializeField] private float decayPerEnemyPerSecond = 0.1f;
     [SerializeField] private float stabilityGainOnKill = 5f;
     [SerializeField] private float scanInterval = 0.25f;
 
-    [Header("Passive Decay")]
-    [Tooltip("Stability lost per real second that passes while this world's scene is unloaded " +
-             "(e.g. player is in the Hub or inside another mirror world).")]
-    [SerializeField] private float passiveDecayPerSecond = 0.5f;
-
-    private float currentStability;
     private float scanTimer;
     private int aliveEnemyCount;
-    private bool isDepleted;
     private string sceneName;
+    private StabilitySystem stabilitySystem;
+    private bool isSubscribed;
 
     public event Action<float, float> OnStabilityChanged;
     public event Action StabilityDepleted;
 
-    public float CurrentStability => currentStability;
-    public float MaxStability => maxStability;
-    public float Instability => maxStability > 0f
-        ? 1f - Mathf.Clamp01(currentStability / maxStability)
+    public float CurrentStability => TryGetStability(out float current, out _) ? current : 0f;
+    public float MaxStability => TryGetStability(out _, out float max) ? max : 0f;
+    public float Instability => MaxStability > 0f
+        ? 1f - Mathf.Clamp01(CurrentStability / MaxStability)
         : 0f;
     public int AliveEnemyCount => aliveEnemyCount;
 
@@ -42,43 +37,41 @@ public class WorldStability : MonoBehaviour, IResourceStat
     private void Awake()
     {
         sceneName = gameObject.scene.name;
-        maxStability = Mathf.Max(maxStability, 0f);
-
-        currentStability = MirrorWorldRegistry.TryResolve(
-            sceneName,
-            passiveDecayPerSecond,
-            maxStability,
-            out float resolvedStability
-        )
-            ? resolvedStability
-            : maxStability;
+        stabilitySystem = StabilitySystem.Instance;
     }
 
     private void OnEnable()
     {
         EnemyHealth.AnyEnemyDied += HandleEnemyDied;
+        SubscribeToStabilitySystem();
     }
 
     private void OnDisable()
     {
         EnemyHealth.AnyEnemyDied -= HandleEnemyDied;
+        UnsubscribeFromStabilitySystem();
     }
 
-    private void OnDestroy()
+    private IEnumerator Start()
     {
-        // Persist wherever we ended up so the next time this scene loads (or is checked
-        // passively) picks up decay from here, not from a fresh maxStability.
-        MirrorWorldRegistry.Save(sceneName, currentStability);
-    }
+        if (stabilitySystem == null)
+        {
+            yield return null;
+            stabilitySystem = StabilitySystem.Instance;
+            SubscribeToStabilitySystem();
+        }
 
-    private void Start()
-    {
+        if (stabilitySystem == null)
+        {
+            Debug.LogError($"WorldStability in '{sceneName}' could not find a StabilitySystem.", this);
+            enabled = false;
+            yield break;
+        }
+
         NotifyStabilityChanged();
 
-        // Covers the case where passive decay already brought this world to 0 before we
-        // even loaded it — without this, a world that "died" offline would never fire
-        // StabilityDepleted, since Update() below exits early once currentStability <= 0.
-        CheckDepleted();
+        if (stabilitySystem.IsWorldBlackedOut(sceneName))
+            StabilityDepleted?.Invoke();
     }
 
     private void Update()
@@ -90,50 +83,83 @@ public class WorldStability : MonoBehaviour, IResourceStat
             scanTimer = Mathf.Max(0.05f, scanInterval);
         }
 
-        if (aliveEnemyCount <= 0 || currentStability <= 0f)
+        if (aliveEnemyCount <= 0 || stabilitySystem.IsWorldBlackedOut(sceneName))
             return;
 
-        currentStability = Mathf.Max(
-            currentStability - decayPerEnemyPerSecond * aliveEnemyCount * Time.deltaTime,
-            0f
+        stabilitySystem.ChangeWorldStability(
+            sceneName,
+            -decayPerEnemyPerSecond * aliveEnemyCount * Time.deltaTime
         );
-        NotifyStabilityChanged();
-
-        CheckDepleted();
     }
 
     public void Restore(float amount)
     {
-        if (amount <= 0f || currentStability >= maxStability)
+        if (amount <= 0f || stabilitySystem == null)
             return;
 
-        currentStability = Mathf.Min(currentStability + amount, maxStability);
-        NotifyStabilityChanged();
+        stabilitySystem.ChangeWorldStability(sceneName, amount);
     }
 
     public void SetStability(float value)
     {
-        currentStability = Mathf.Clamp(value, 0f, maxStability);
-        isDepleted = currentStability <= 0f;
-        NotifyStabilityChanged();
+        if (stabilitySystem == null || !TryGetStability(out float current, out _))
+            return;
+
+        stabilitySystem.ChangeWorldStability(sceneName, value - current);
     }
 
     private void NotifyStabilityChanged()
     {
-        OnStabilityChanged?.Invoke(currentStability, maxStability);
+        if (TryGetStability(out float current, out float max))
+            OnStabilityChanged?.Invoke(current, max);
     }
 
-    private void CheckDepleted()
+    private bool TryGetStability(out float current, out float max)
     {
-        if (currentStability <= 0f && !isDepleted)
-        {
-            isDepleted = true;
-            StabilityDepleted?.Invoke();
-        }
+        current = 0f;
+        max = 0f;
+
+        return stabilitySystem != null && stabilitySystem.TryGetWorldStability(sceneName, out current, out max);
     }
 
     private void HandleEnemyDied(EnemyHealth enemy)
     {
         Restore(stabilityGainOnKill);
+    }
+
+    private void SubscribeToStabilitySystem()
+    {
+        if (isSubscribed)
+            return;
+
+        stabilitySystem ??= StabilitySystem.Instance;
+        if (stabilitySystem == null)
+            return;
+
+        stabilitySystem.WorldStabilityChanged += HandleWorldStabilityChanged;
+        stabilitySystem.WorldDepleted += HandleWorldDepleted;
+        isSubscribed = true;
+    }
+
+    private void UnsubscribeFromStabilitySystem()
+    {
+        if (!isSubscribed || stabilitySystem == null)
+            return;
+
+        stabilitySystem.WorldStabilityChanged -= HandleWorldStabilityChanged;
+        stabilitySystem.WorldDepleted -= HandleWorldDepleted;
+        isSubscribed = false;
+    }
+
+    private void HandleWorldStabilityChanged(string changedSceneName, float current, float max)
+    {
+        if (changedSceneName == sceneName)
+            OnStabilityChanged?.Invoke(current, max);
+    }
+
+    private void HandleWorldDepleted(string depletedSceneName)
+    {
+        if (depletedSceneName == sceneName)
+            StabilityDepleted?.Invoke();
     }
 }
