@@ -56912,6 +56912,14 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::PanicVignetteUI
   playerPanic: {fileID: 0}
   globalVolume: {fileID: 0}
+  enableStabilityBlackout: 0
+  worldStability: {fileID: 0}
+  warningThreshold: 70
+  criticalThreshold: 30
+  warningVignetteIntensity: 0.48
+  criticalVignetteIntensity: 0.72
+  depletedVignetteIntensity: 1
+  blackoutSmoothness: 0.45
   baseVignetteIntensity: 0.2
   maximumVignetteIntensity: 0.65
   baseVignetteSmoothness: 0.2
@@ -60399,7 +60407,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Unity.Cinemachine::Unity.Cinemachine.CinemachineFollow
   TrackerSettings:
     BindingMode: 4
-    PositionDamping: {x: 1, y: 1, z: 1}
+    PositionDamping: {x: 0, y: 0, z: 0}
     AngularDampingMode: 0
     RotationDamping: {x: 1, y: 1, z: 1}
     QuaternionDamping: 1

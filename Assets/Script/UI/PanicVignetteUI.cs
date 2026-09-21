@@ -8,6 +8,16 @@ public class PanicVignetteUI : MonoBehaviour
     [SerializeField] private PlayerPanic playerPanic;
     [SerializeField] private Volume globalVolume;
 
+    [Header("Stability Blackout")]
+    [SerializeField] private bool enableStabilityBlackout;
+    [SerializeField] private WorldStability worldStability;
+    [SerializeField, Range(0f, 100f)] private float warningThreshold = 70f;
+    [SerializeField, Range(0f, 100f)] private float criticalThreshold = 30f;
+    [SerializeField, Range(0f, 1f)] private float warningVignetteIntensity = 0.48f;
+    [SerializeField, Range(0f, 1f)] private float criticalVignetteIntensity = 0.72f;
+    [SerializeField, Range(0f, 1f)] private float depletedVignetteIntensity = 1f;
+    [SerializeField, Range(0f, 1f)] private float blackoutSmoothness = 0.45f;
+
     [Header("Vignette")]
     [SerializeField, Range(0f, 1f)] private float baseVignetteIntensity = 0.2f;
     [SerializeField, Range(0f, 1f)] private float maximumVignetteIntensity = 0.65f;
@@ -27,19 +37,32 @@ public class PanicVignetteUI : MonoBehaviour
 
         if (globalVolume != null && globalVolume.profile != null)
             globalVolume.profile.TryGet(out vignette);
+
+        if (enableStabilityBlackout)
+            worldStability ??= FindAnyObjectByType<WorldStability>();
     }
 
     private void Update()
     {
+        if (playerPanic == null)
+            playerPanic = FindAnyObjectByType<PlayerPanic>();
+
+        if (enableStabilityBlackout && worldStability == null)
+            worldStability = FindAnyObjectByType<WorldStability>();
+
         float targetPanic = playerPanic != null ? playerPanic.CurrentPanic : 0f;
         visualPanic = Mathf.MoveTowards(visualPanic, targetPanic, responseSpeed * Time.deltaTime);
+
+        float panicIntensity = Mathf.Lerp(baseVignetteIntensity, maximumVignetteIntensity, visualPanic);
+        float panicSmoothness = Mathf.Lerp(baseVignetteSmoothness, maximumVignetteSmoothness, visualPanic);
+        float blackoutIntensity = GetBlackoutIntensity();
 
         if (vignette != null)
         {
             vignette.intensity.overrideState = true;
-            vignette.intensity.value = Mathf.Lerp(baseVignetteIntensity, maximumVignetteIntensity, visualPanic);
+            vignette.intensity.value = Mathf.Max(panicIntensity, blackoutIntensity);
             vignette.smoothness.overrideState = true;
-            vignette.smoothness.value = Mathf.Lerp(baseVignetteSmoothness, maximumVignetteSmoothness, visualPanic);
+            vignette.smoothness.value = Mathf.Max(panicSmoothness, blackoutIntensity > 0f ? blackoutSmoothness : 0f);
         }
     }
 
@@ -52,5 +75,24 @@ public class PanicVignetteUI : MonoBehaviour
             vignette.intensity.value = baseVignetteIntensity;
             vignette.smoothness.value = baseVignetteSmoothness;
         }
+    }
+
+    private float GetBlackoutIntensity()
+    {
+        if (!enableStabilityBlackout || worldStability == null || worldStability.MaxStability <= 0f)
+            return 0f;
+
+        float stabilityPercent = Mathf.Clamp01(worldStability.CurrentStability / worldStability.MaxStability) * 100f;
+
+        if (stabilityPercent <= 0f)
+            return depletedVignetteIntensity;
+
+        if (stabilityPercent <= criticalThreshold)
+            return criticalVignetteIntensity;
+
+        if (stabilityPercent <= warningThreshold)
+            return warningVignetteIntensity;
+
+        return 0f;
     }
 }

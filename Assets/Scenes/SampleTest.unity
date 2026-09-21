@@ -236,7 +236,7 @@ MonoBehaviour:
     m_Bits: 1
   m_VolumeTrigger: {fileID: 0}
   m_VolumeFrameworkUpdateModeOption: 2
-  m_RenderPostProcessing: 0
+  m_RenderPostProcessing: 1
   m_Antialiasing: 0
   m_AntialiasingQuality: 2
   m_StopNaN: 0
@@ -1172,6 +1172,7 @@ MonoBehaviour:
   waveFormat: WAVE {0}/{1}
   remainingEnemyFormat: 'REMAINING ENEMY: {0}'
   gate: {fileID: 0}
+  maxUnstabilizerSpawns: 3
 --- !u!4 &420260806
 Transform:
   m_ObjectHideFlags: 0
@@ -2820,6 +2821,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8d2c4f6a1b3e5d7f9c0a2e4b6d8f1a3c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::WorldStability
+  maxStability: 100
   decayPerEnemyPerSecond: 0.1
   stabilityGainOnKill: 5
   scanInterval: 0.25
@@ -3836,6 +3838,14 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::PanicVignetteUI
   playerPanic: {fileID: 0}
   globalVolume: {fileID: 356956890}
+  enableStabilityBlackout: 1
+  worldStability: {fileID: 1220251114}
+  warningThreshold: 70
+  criticalThreshold: 30
+  warningVignetteIntensity: 0.48
+  criticalVignetteIntensity: 0.72
+  depletedVignetteIntensity: 1
+  blackoutSmoothness: 0.45
   baseVignetteIntensity: 0.2
   maximumVignetteIntensity: 0.65
   baseVignetteSmoothness: 0.2

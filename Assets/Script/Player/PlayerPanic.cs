@@ -50,9 +50,9 @@ public class PlayerPanic : MonoBehaviour
     {
         float nearestDistanceSquared = float.MaxValue;
         int nearbyEnemyCount = 0;
-        IReadOnlyList<EnemyAI> enemies = EnemyAI.Active;
+        IReadOnlyList<EnemyHealth> enemies = EnemyHealth.Active;
 
-        foreach (EnemyAI enemy in enemies)
+        foreach (EnemyHealth enemy in enemies)
         {
             if (enemy == null)
                 continue;

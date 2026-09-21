@@ -14,7 +14,7 @@ GameObject:
   - component: {fileID: 2720449323093105725}
   - component: {fileID: 4479354703824053779}
   - component: {fileID: 1961738137817312713}
-  - component: {fileID: 907807839657444868}
+  - component: {fileID: 4728402726692283614}
   - component: {fileID: 8852781826371524152}
   m_Layer: 0
   m_Name: UN Rat
@@ -181,7 +181,7 @@ MonoBehaviour:
   fillTransform: {fileID: 1564009632729953177}
   barRoot: {fileID: 7050524247140718886}
   hideWhenFull: 1
---- !u!114 &907807839657444868
+--- !u!114 &4728402726692283614
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -201,7 +201,7 @@ MonoBehaviour:
   detectionRadius: 6
   chaseSpeed: 3.5
   multiplierPerMonster: 1
-  maxMultiplier: 10
+  maxMultiplier: 20
 --- !u!95 &8852781826371524152
 Animator:
   serializedVersion: 7

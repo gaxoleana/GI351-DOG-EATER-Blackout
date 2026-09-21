@@ -106,6 +106,9 @@ public class ResourceBarUI : MonoBehaviour
             fillImage.fillAmount = percentage;
 
         if (valueText != null)
-            valueText.text = $"{label} {Mathf.CeilToInt(current)}/{Mathf.CeilToInt(max)}";
+        {
+            int currentPercent = Mathf.RoundToInt(percentage * 100f);
+            valueText.text = $"{label} {currentPercent}/100";
+        }
     }
 }
