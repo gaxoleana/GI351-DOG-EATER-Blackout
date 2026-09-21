@@ -6,8 +6,6 @@ public abstract class RoamingEnemyBase : MonoBehaviour
     [Header("References")]
     [SerializeField] protected Transform playerTransform;
 
-    private WorldStability worldStability;
-
     [Header("Roaming")]
     [SerializeField] protected float roamRadius = 5f;
     [SerializeField] protected float roamSpeed = 2f;
@@ -30,8 +28,6 @@ public abstract class RoamingEnemyBase : MonoBehaviour
         spriteRenderer = GetComponentInChildren<SpriteRenderer>();
         spawnPosition = transform.position;
 
-        worldStability = FindAnyObjectByType<WorldStability>();
-
         if (playerTransform == null)
         {
             GameObject playerObject = GameObject.FindGameObjectWithTag("Player");
@@ -40,15 +36,6 @@ public abstract class RoamingEnemyBase : MonoBehaviour
         }
 
         PickNewRoamTarget();
-    }
-
-    protected float GetDamageMultiplier()
-    {
-        if (worldStability == null)
-            return 1f;
-
-        float stabilityPercent = Mathf.Clamp(worldStability.StabilityPercent, 0f, 100f);
-        return stabilityPercent > 0f && stabilityPercent <= 30f ? 2f : 1f;
     }
 
     protected void UpdateRoaming()

@@ -126,15 +126,6 @@ public class StabilitySystem : MonoBehaviour, IResourceStat
         return false;
     }
 
-    public void EnsureWorld(string sceneName, float maxStability)
-    {
-        if (string.IsNullOrWhiteSpace(sceneName) || worldStates.ContainsKey(sceneName))
-            return;
-
-        AddWorldDefinition(sceneName, maxStability);
-        RefreshTotalStability();
-    }
-
     public bool IsWorldBlackedOut(string sceneName)
     {
         return worldStates.TryGetValue(sceneName, out WorldState state) && state.IsBlackedOut;

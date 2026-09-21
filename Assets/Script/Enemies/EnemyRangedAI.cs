@@ -104,11 +104,10 @@ public class EnemyRangedAI : RoamingEnemyBase
         }
 
         Vector3 direction = GetDirectionToPlayer();
-        float finalDamage = projectileDamage * GetDamageMultiplier();
         projectile.Launch(
             direction,
             projectileSpeed,
-            finalDamage,
+            projectileDamage,
             projectileLifetime,
             gameObject
         );
