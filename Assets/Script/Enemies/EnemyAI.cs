@@ -61,7 +61,8 @@ public class EnemyAI : RoamingEnemyBase
 
             if (attackDamageTimer <= 0f)
             {
-                playerDamageable?.TakeDamage(attackDamage);
+                float finalDamage = attackDamage * GetDamageMultiplier();
+                playerDamageable?.TakeDamage(finalDamage);
                 attackDamagePending = false;
             }
         }

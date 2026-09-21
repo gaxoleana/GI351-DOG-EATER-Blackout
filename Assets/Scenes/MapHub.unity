@@ -48496,6 +48496,17 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1484832631}
   m_Mesh: {fileID: 10206, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!114 &1485410994 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 8999723935620718330, guid: d3c113f92da78cd4e984d001256c4af4, type: 3}
+  m_PrefabInstance: {fileID: 210968452}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5e0b4c5e1a9f4a87a8b0b6b8c2f7d901, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PlayerPanic
 --- !u!1 &1491820745
 GameObject:
   m_ObjectHideFlags: 0
@@ -56910,8 +56921,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7c4b2c9e6f0d4a8ab1e3c5d7f9a2b6e1, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PanicVignetteUI
-  playerPanic: {fileID: 0}
-  globalVolume: {fileID: 0}
+  playerPanic: {fileID: 1485410994}
+  globalVolume: {fileID: 1708825428}
   baseVignetteIntensity: 0.2
   maximumVignetteIntensity: 0.65
   baseVignetteSmoothness: 0.2

@@ -236,7 +236,7 @@ MonoBehaviour:
     m_Bits: 1
   m_VolumeTrigger: {fileID: 0}
   m_VolumeFrameworkUpdateModeOption: 2
-  m_RenderPostProcessing: 0
+  m_RenderPostProcessing: 1
   m_Antialiasing: 0
   m_AntialiasingQuality: 2
   m_StopNaN: 0
@@ -319,6 +319,63 @@ Transform:
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 625338665}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &72109420
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 72109422}
+  - component: {fileID: 72109421}
+  m_Layer: 0
+  m_Name: BlackoutZoneController
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &72109421
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 72109420}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1f52ba740da45b74489b986b07533d00, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::BlackoutZoneController
+  worldStability: {fileID: 1220251114}
+  globalVolume: {fileID: 356956890}
+  unstabilizerPrefab: {fileID: 0}
+  spawnPoints: []
+  playerTransform: {fileID: 0}
+  safeZoneVignette: 0.08
+  warningZoneVignette: 0.48
+  criticalZoneVignette: 0.72
+  dimensionBreakVignette: 1
+  vignetteResponseSpeed: 8
+  spawnInterval: 8
+  spawnRadius: 12
+  maxActiveUnstabilizers: 3
+--- !u!4 &72109422
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 72109420}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 64.31358, y: 0, z: 6.65125}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &109038185
 GameObject:
@@ -1172,6 +1229,7 @@ MonoBehaviour:
   waveFormat: WAVE {0}/{1}
   remainingEnemyFormat: 'REMAINING ENEMY: {0}'
   gate: {fileID: 0}
+  maxUnstabilizerSpawns: 3
 --- !u!4 &420260806
 Transform:
   m_ObjectHideFlags: 0
@@ -2820,6 +2878,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8d2c4f6a1b3e5d7f9c0a2e4b6d8f1a3c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::WorldStability
+  maxStability: 100
   decayPerEnemyPerSecond: 0.1
   stabilityGainOnKill: 5
   scanInterval: 0.25
@@ -4338,3 +4397,4 @@ SceneRoots:
   - {fileID: 1505118154}
   - {fileID: 625338665}
   - {fileID: 420260806}
+  - {fileID: 72109422}

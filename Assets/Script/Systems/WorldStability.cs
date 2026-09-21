@@ -5,6 +5,7 @@ using UnityEngine;
 public class WorldStability : MonoBehaviour, IResourceStat
 {
     [Header("World Combat Decay")]
+    [SerializeField, Min(1f)] private float maxStability = 100f;
     [SerializeField] private float decayPerEnemyPerSecond = 0.1f;
     [SerializeField] private float stabilityGainOnKill = 5f;
     [SerializeField] private float scanInterval = 0.25f;
@@ -23,6 +24,9 @@ public class WorldStability : MonoBehaviour, IResourceStat
 
     public float CurrentStability => TryGetStability(out float current, out _) ? current : 0f;
     public float MaxStability => TryGetStability(out _, out float max) ? max : 0f;
+    public float StabilityPercent => MaxStability > 0f
+        ? Mathf.Clamp01(CurrentStability / MaxStability) * 100f
+        : 0f;
     public float Instability => MaxStability > 0f
         ? 1f - Mathf.Clamp01(CurrentStability / MaxStability)
         : 0f;
@@ -71,6 +75,7 @@ public class WorldStability : MonoBehaviour, IResourceStat
             yield break;
         }
 
+        stabilitySystem.EnsureWorld(sceneName, maxStability);
         NotifyStabilityChanged();
 
         if (stabilitySystem.IsWorldBlackedOut(sceneName))
