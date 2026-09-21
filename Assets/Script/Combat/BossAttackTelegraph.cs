@@ -1,0 +1,125 @@
+using UnityEngine;
+
+public class BossAttackTelegraph : MonoBehaviour
+{
+    private enum Shape { Circle, Line, Fan }
+    private LineRenderer lineRenderer;
+    private Shape shape;
+    private float radius;
+    private float length;
+    private float width;
+    private float angle;
+    private float progress;
+    private Color color;
+    private int segmentCount;
+
+    public static BossAttackTelegraph CreateCircle(Vector3 center, float radius, float duration, Color color) => Create(center, Shape.Circle, radius, 0f, 0f, 360f, color, 48);
+
+    public static BossAttackTelegraph CreateVerticalCircle(Vector3 center, Vector3 direction, float radius, float duration, Color color)
+    {
+        BossAttackTelegraph telegraph = Create(center, Shape.Circle, radius, 0f, 0f, 360f, color, 48);
+        telegraph.transform.right = Flatten(direction);
+        telegraph.transform.Rotate(Vector3.right, 90f, Space.Self);
+        return telegraph;
+    }
+
+    public static BossAttackTelegraph CreateLine(Vector3 origin, Vector3 direction, float length, float width, float duration, Color color)
+    {
+        BossAttackTelegraph telegraph = Create(origin, Shape.Line, 0f, length, width, 0f, color, 5);
+        telegraph.transform.right = Flatten(direction);
+        return telegraph;
+    }
+
+    public static BossAttackTelegraph CreateFan(Vector3 origin, Vector3 direction, float radius, float angle, float duration, Color color)
+    {
+        BossAttackTelegraph telegraph = Create(origin, Shape.Fan, radius, 0f, 0f, angle, color, 28);
+        telegraph.transform.right = Flatten(direction);
+        return telegraph;
+    }
+
+    public void SetProgress(float value)
+    {
+        progress = Mathf.Clamp01(value);
+        UpdateVisual();
+        if (progress >= 1f)
+            Destroy(gameObject);
+    }
+
+    private static BossAttackTelegraph Create(Vector3 position, Shape shape, float radius, float length, float width, float angle, Color color, int segmentCount)
+    {
+        GameObject telegraphObject = new("Boss Attack Telegraph");
+        telegraphObject.transform.position = position;
+        BossAttackTelegraph telegraph = telegraphObject.AddComponent<BossAttackTelegraph>();
+        telegraph.shape = shape;
+        telegraph.radius = radius;
+        telegraph.length = length;
+        telegraph.width = width;
+        telegraph.angle = angle;
+        telegraph.color = color;
+        telegraph.segmentCount = segmentCount;
+        telegraph.lineRenderer = telegraphObject.AddComponent<LineRenderer>();
+        telegraph.lineRenderer.useWorldSpace = false;
+        telegraph.lineRenderer.loop = shape != Shape.Line;
+        telegraph.lineRenderer.alignment = LineAlignment.TransformZ;
+        telegraph.lineRenderer.material = new Material(Shader.Find("Sprites/Default"));
+        telegraph.lineRenderer.startWidth = 0.08f;
+        telegraph.lineRenderer.endWidth = 0.08f;
+        telegraph.UpdateVisual();
+        return telegraph;
+    }
+
+    private void UpdateVisual()
+    {
+        Color currentColor = color;
+        currentColor.a = Mathf.Lerp(0.2f, 0.95f, progress);
+        lineRenderer.startColor = currentColor;
+        lineRenderer.endColor = currentColor;
+        lineRenderer.startWidth = Mathf.Lerp(0.04f, 0.12f, progress);
+        lineRenderer.endWidth = lineRenderer.startWidth;
+
+        if (shape == Shape.Circle) DrawCircle();
+        else if (shape == Shape.Line) DrawLine();
+        else DrawFan();
+    }
+
+    private void DrawCircle()
+    {
+        lineRenderer.positionCount = segmentCount;
+        for (int index = 0; index < segmentCount; index++)
+        {
+            float radians = index * Mathf.PI * 2f / segmentCount;
+            lineRenderer.SetPosition(index, new Vector3(Mathf.Cos(radians), 0f, Mathf.Sin(radians)) * radius);
+        }
+    }
+
+    private void DrawLine()
+    {
+        float visibleLength = length * progress;
+        float halfWidth = width * 0.5f;
+        lineRenderer.loop = true;
+        lineRenderer.positionCount = 5;
+        lineRenderer.SetPosition(0, new Vector3(0f, 0f, -halfWidth));
+        lineRenderer.SetPosition(1, new Vector3(visibleLength, 0f, -halfWidth));
+        lineRenderer.SetPosition(2, new Vector3(visibleLength, 0f, halfWidth));
+        lineRenderer.SetPosition(3, new Vector3(0f, 0f, halfWidth));
+        lineRenderer.SetPosition(4, new Vector3(0f, 0f, -halfWidth));
+    }
+
+    private void DrawFan()
+    {
+        float visibleAngle = angle * progress;
+        float startAngle = -visibleAngle * 0.5f;
+        lineRenderer.positionCount = segmentCount;
+        for (int index = 0; index < segmentCount; index++)
+        {
+            float radians = Mathf.Lerp(startAngle, -startAngle, index / (float)(segmentCount - 1)) * Mathf.Deg2Rad;
+            lineRenderer.SetPosition(index, new Vector3(Mathf.Cos(radians), 0f, Mathf.Sin(radians)) * radius);
+        }
+    }
+
+    private static Vector3 Flatten(Vector3 direction)
+    {
+        direction.y = 0f;
+        return direction.sqrMagnitude > 0.001f ? direction.normalized : Vector3.right;
+    }
+}
