@@ -8,9 +8,12 @@ public class WorldStability : MonoBehaviour, IResourceStat
     [SerializeField] private float decayPerEnemyPerSecond = 0.1f;
     [SerializeField] private float stabilityGainOnKill = 5f;
     [SerializeField] private float scanInterval = 0.25f;
+    [SerializeField, Min(1f)] private float unstabilizerMultiplierPerMonster = 1f;
+    [SerializeField, Min(1f)] private float maxUnstabilizerMultiplier = 3f;
 
     private float scanTimer;
     private int aliveEnemyCount;
+    private int aliveUnstabilizerCount;
     private string sceneName;
     private StabilitySystem stabilitySystem;
     private bool isSubscribed;
@@ -80,15 +83,21 @@ public class WorldStability : MonoBehaviour, IResourceStat
         if (scanTimer <= 0f)
         {
             aliveEnemyCount = EnemyHealth.Active.Count;
+            aliveUnstabilizerCount = UnstabilizerEnemy.Active.Count;
             scanTimer = Mathf.Max(0.05f, scanInterval);
         }
 
         if (aliveEnemyCount <= 0 || stabilitySystem.IsWorldBlackedOut(sceneName))
             return;
 
+        float multiplier = Mathf.Min(
+            1f + (aliveUnstabilizerCount * unstabilizerMultiplierPerMonster),
+            maxUnstabilizerMultiplier
+        );
+
         stabilitySystem.ChangeWorldStability(
             sceneName,
-            -decayPerEnemyPerSecond * aliveEnemyCount * Time.deltaTime
+            -decayPerEnemyPerSecond * aliveEnemyCount * multiplier * Time.deltaTime
         );
     }
 

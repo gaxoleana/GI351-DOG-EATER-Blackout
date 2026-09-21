@@ -47,8 +47,13 @@ public class WaveManager : MonoBehaviour
     [Tooltip("Disabled until every configured wave is cleared.")]
     [SerializeField] private GameObject gate;
 
+    [Header("Monster Limits")]
+    [Tooltip("Maximum number of Unstabilizer enemies that can spawn from this WaveManager. Set to 0 for unlimited.")]
+    [SerializeField, Min(0)] private int maxUnstabilizerSpawns = 3;
+
     private readonly List<GameObject> aliveEnemies = new();
     private int currentWaveIndex = -1;
+    private int spawnedUnstabilizerCount;
     private bool isRunning;
     private bool isComplete;
     private int displayedWaveNumber = int.MinValue;
@@ -100,6 +105,7 @@ public class WaveManager : MonoBehaviour
             return;
         }
 
+        spawnedUnstabilizerCount = 0;
         UpdateUI(true);
         StartCoroutine(RunWaves());
     }
@@ -154,6 +160,10 @@ public class WaveManager : MonoBehaviour
                 spawnPoint != null ? spawnPoint.position : transform.position,
                 spawnPoint != null ? spawnPoint.rotation : transform.rotation
             );
+
+            if (enemy != null && enemy.GetComponent<UnstabilizerEnemy>() != null)
+                spawnedUnstabilizerCount++;
+
             aliveEnemies.Add(enemy);
             UpdateUI(true);
 
@@ -197,31 +207,36 @@ public class WaveManager : MonoBehaviour
         return false;
     }
 
-    private static GameObject SelectEnemyPrefab(EnemySpawnDefinition[] enemyTypes)
+    private GameObject SelectEnemyPrefab(EnemySpawnDefinition[] enemyTypes)
     {
+        List<EnemySpawnDefinition> eligibleTypes = new();
         float totalWeight = 0f;
 
-        foreach (EnemySpawnDefinition enemyType in enemyTypes)
-        {
-            if (enemyType?.EnemyPrefab != null && enemyType.SpawnWeight > 0f)
-                totalWeight += enemyType.SpawnWeight;
-        }
-
-        if (totalWeight <= 0f)
-            return null;
-
-        float randomValue = UnityEngine.Random.Range(0f, totalWeight);
         foreach (EnemySpawnDefinition enemyType in enemyTypes)
         {
             if (enemyType?.EnemyPrefab == null || enemyType.SpawnWeight <= 0f)
                 continue;
 
+            bool isUnstabilizer = enemyType.EnemyPrefab.GetComponent<UnstabilizerEnemy>() != null;
+            if (isUnstabilizer && maxUnstabilizerSpawns > 0 && spawnedUnstabilizerCount >= maxUnstabilizerSpawns)
+                continue;
+
+            eligibleTypes.Add(enemyType);
+            totalWeight += enemyType.SpawnWeight;
+        }
+
+        if (eligibleTypes.Count == 0 || totalWeight <= 0f)
+            return null;
+
+        float randomValue = UnityEngine.Random.Range(0f, totalWeight);
+        foreach (EnemySpawnDefinition enemyType in eligibleTypes)
+        {
             randomValue -= enemyType.SpawnWeight;
             if (randomValue <= 0f)
                 return enemyType.EnemyPrefab;
         }
 
-        return null;
+        return eligibleTypes[eligibleTypes.Count - 1].EnemyPrefab;
     }
 
     private static Transform GetSpawnPoint(WaveDefinition wave, int enemyIndex)
