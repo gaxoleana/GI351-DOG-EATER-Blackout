@@ -178,9 +178,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9cb2fa9103736b04eaae23385ecbc55c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::EnemyHealthBar
-  enemyHealth: {fileID: 0}
-  fillTransform: {fileID: 0}
-  barRoot: {fileID: 0}
+  enemyHealth: {fileID: 316092760600644479}
+  fillTransform: {fileID: 5477213324304519160}
+  barRoot: {fileID: 7864733738592950898}
   hideWhenFull: 1
 --- !u!114 &4376763853330033257
 MonoBehaviour:

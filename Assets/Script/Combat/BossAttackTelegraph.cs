@@ -12,6 +12,9 @@ public class BossAttackTelegraph : MonoBehaviour
     private float progress;
     private Color color;
     private int segmentCount;
+    private bool showFullLine;
+    private bool rotationFrozen;
+    private Quaternion frozenRotation;
 
     public static BossAttackTelegraph CreateCircle(Vector3 center, float radius, float duration, Color color) => Create(center, Shape.Circle, radius, 0f, 0f, 360f, color, 48);
 
@@ -20,6 +23,7 @@ public class BossAttackTelegraph : MonoBehaviour
         BossAttackTelegraph telegraph = Create(center, Shape.Circle, radius, 0f, 0f, 360f, color, 48);
         telegraph.transform.right = Flatten(direction);
         telegraph.transform.Rotate(Vector3.right, 90f, Space.Self);
+        telegraph.FreezeRotation();
         return telegraph;
     }
 
@@ -27,6 +31,8 @@ public class BossAttackTelegraph : MonoBehaviour
     {
         BossAttackTelegraph telegraph = Create(origin, Shape.Line, 0f, length, width, 0f, color, 5);
         telegraph.transform.right = Flatten(direction);
+        telegraph.transform.Rotate(Vector3.right, 90f, Space.Self);
+        telegraph.FreezeRotation();
         return telegraph;
     }
 
@@ -34,7 +40,20 @@ public class BossAttackTelegraph : MonoBehaviour
     {
         BossAttackTelegraph telegraph = Create(origin, Shape.Fan, radius, 0f, 0f, angle, color, 28);
         telegraph.transform.right = Flatten(direction);
+        telegraph.FreezeRotation();
         return telegraph;
+    }
+
+    public void FreezeRotation()
+    {
+        frozenRotation = transform.rotation;
+        rotationFrozen = true;
+    }
+
+    private void LateUpdate()
+    {
+        if (rotationFrozen)
+            transform.rotation = frozenRotation;
     }
 
     public void SetProgress(float value)
@@ -43,6 +62,12 @@ public class BossAttackTelegraph : MonoBehaviour
         UpdateVisual();
         if (progress >= 1f)
             Destroy(gameObject);
+    }
+
+    public void ShowFullLine()
+    {
+        showFullLine = true;
+        UpdateVisual();
     }
 
     private static BossAttackTelegraph Create(Vector3 position, Shape shape, float radius, float length, float width, float angle, Color color, int segmentCount)
@@ -71,10 +96,10 @@ public class BossAttackTelegraph : MonoBehaviour
     private void UpdateVisual()
     {
         Color currentColor = color;
-        currentColor.a = Mathf.Lerp(0.2f, 0.95f, progress);
+        currentColor.a = Mathf.Lerp(0.45f, 1f, progress);
         lineRenderer.startColor = currentColor;
         lineRenderer.endColor = currentColor;
-        lineRenderer.startWidth = Mathf.Lerp(0.04f, 0.12f, progress);
+        lineRenderer.startWidth = Mathf.Lerp(0.08f, 0.18f, progress);
         lineRenderer.endWidth = lineRenderer.startWidth;
 
         if (shape == Shape.Circle) DrawCircle();
@@ -85,16 +110,17 @@ public class BossAttackTelegraph : MonoBehaviour
     private void DrawCircle()
     {
         lineRenderer.positionCount = segmentCount;
+        float inwardRadius = Mathf.Max(0f, radius - lineRenderer.startWidth * 0.5f);
         for (int index = 0; index < segmentCount; index++)
         {
             float radians = index * Mathf.PI * 2f / segmentCount;
-            lineRenderer.SetPosition(index, new Vector3(Mathf.Cos(radians), 0f, Mathf.Sin(radians)) * radius);
+            lineRenderer.SetPosition(index, new Vector3(Mathf.Cos(radians), 0f, Mathf.Sin(radians)) * inwardRadius);
         }
     }
 
     private void DrawLine()
     {
-        float visibleLength = length * progress;
+        float visibleLength = showFullLine ? length : length * progress;
         float halfWidth = width * 0.5f;
         lineRenderer.loop = true;
         lineRenderer.positionCount = 5;

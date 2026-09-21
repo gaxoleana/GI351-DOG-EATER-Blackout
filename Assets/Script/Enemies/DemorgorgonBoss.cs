@@ -139,6 +139,7 @@ public class DemorgorgonBoss : MonoBehaviour
     {
         nextDashTime = Time.time + Mathf.Max(0f, dashCooldown);
         Vector3 direction = GetDirectionToPlayer();
+        FacePlayer(direction);
         BossAttackTelegraph telegraph = BossAttackTelegraph.CreateLine(transform.position, direction, dashDistance, 0.9f, dashTelegraphDuration, telegraphColor);
         yield return Charge(telegraph, dashTelegraphDuration);
 
