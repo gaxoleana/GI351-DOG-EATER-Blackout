@@ -2228,7 +2228,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9a4e1c7d3b5f46a8c0d2e6f1b7a59384, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ScenePortal
-  targetSceneName: SampleHub
+  targetSceneName: MapHub
   playerPrefab: {fileID: 0}
   playerSpawnOffset: {x: -2, y: 0, z: 0}
   useCustomSpawnPoint: 1

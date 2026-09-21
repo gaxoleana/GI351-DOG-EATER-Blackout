@@ -4,8 +4,6 @@ using UnityEngine.SceneManagement;
 
 public class PlayerPersistenceManager : MonoBehaviour
 {
-    private const string HubSceneName = "SampleHub";
-
     private static PlayerPersistenceManager instance;
     private GameObject persistentPlayer;
     private GameObject playerPrefab;
@@ -52,7 +50,7 @@ public class PlayerPersistenceManager : MonoBehaviour
         Scene activeScene = SceneManager.GetActiveScene();
         ulong sceneHandle = activeScene.handle.GetRawData();
         bool isFirstEnsureInScene = instance.lastEnsuredSceneHandle != sceneHandle;
-        bool isHubScene = activeScene.name == HubSceneName;
+        bool isHubScene = HubSceneMarker.IsHubScene(activeScene);
 
         instance.playerPrefab ??= prefab;
 
@@ -236,7 +234,7 @@ public class PlayerPersistenceManager : MonoBehaviour
 
     private void SetGameplayState(Scene scene)
     {
-        IsGameplayActive = scene.name != HubSceneName;
+        IsGameplayActive = !HubSceneMarker.IsHubScene(scene);
 
         if (persistentPlayer == null)
             return;

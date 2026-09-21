@@ -1982,6 +1982,7 @@ GameObject:
   m_Component:
   - component: {fileID: 780516279}
   - component: {fileID: 780516278}
+  - component: {fileID: 780516280}
   m_Layer: 0
   m_Name: ScriptManager
   m_TagString: Untagged
@@ -2020,6 +2021,19 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &780516280
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 780516276}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3b5d7f9a1c4e6a8b0d2f4c6e8a1b3d5f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::HubSceneMarker
+  isHubScene: 0
 --- !u!1 &861088103
 GameObject:
   m_ObjectHideFlags: 0
@@ -2626,6 +2640,10 @@ PrefabInstance:
     - target: {fileID: 3100228457931147437, guid: 73a61d5953484364ab0bde7a458d8c61, type: 3}
       propertyPath: m_Name
       value: Portal (2)
+      objectReference: {fileID: 0}
+    - target: {fileID: 3100228457931147437, guid: 73a61d5953484364ab0bde7a458d8c61, type: 3}
+      propertyPath: m_IsActive
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 4396179150569013401, guid: 73a61d5953484364ab0bde7a458d8c61, type: 3}
       propertyPath: portal
@@ -5305,6 +5323,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: Portal (1)
       objectReference: {fileID: 0}
+    - target: {fileID: 3100228457931147437, guid: 73a61d5953484364ab0bde7a458d8c61, type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 4396179150569013401, guid: 73a61d5953484364ab0bde7a458d8c61, type: 3}
       propertyPath: portal
       value: 
@@ -5402,6 +5424,10 @@ PrefabInstance:
     - target: {fileID: 3100228457931147437, guid: 73a61d5953484364ab0bde7a458d8c61, type: 3}
       propertyPath: m_Name
       value: Portal (0)
+      objectReference: {fileID: 0}
+    - target: {fileID: 3100228457931147437, guid: 73a61d5953484364ab0bde7a458d8c61, type: 3}
+      propertyPath: m_IsActive
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 4396179150569013401, guid: 73a61d5953484364ab0bde7a458d8c61, type: 3}
       propertyPath: portal
