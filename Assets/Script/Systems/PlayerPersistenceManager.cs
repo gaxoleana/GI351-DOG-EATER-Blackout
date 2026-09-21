@@ -252,30 +252,21 @@ public class PlayerPersistenceManager : MonoBehaviour
             controller.ResetControlState();
         }
 
-        PlayerAttack attack = persistentPlayer.GetComponent<PlayerAttack>();
-        if (attack != null)
-        {
-            attack.enabled = true;
-            attack.EnableInputActions();
-        }
-
-        PlayerAbilities abilities = persistentPlayer.GetComponent<PlayerAbilities>();
-        if (abilities != null)
-        {
-            abilities.enabled = true;
-            abilities.EnableInputActions();
-        }
-
-        EnableComponent<PlayerDamageReceiver>();
-        EnableComponent<PlayerHealth>();
-        EnableComponent<PlayerPanic>();
+        // A Hub is still navigable, so movement stays available. All combat and
+        // survival systems are disabled there and are restored upon entering a world.
+        SetComponentEnabled<PlayerAttack>(IsGameplayActive);
+        SetComponentEnabled<PlayerAbilities>(IsGameplayActive);
+        SetComponentEnabled<PlayerDamageReceiver>(IsGameplayActive);
+        SetComponentEnabled<PlayerHealth>(IsGameplayActive);
+        SetComponentEnabled<PlayerPanic>(IsGameplayActive);
+        SetComponentEnabled<PlayerAim>(IsGameplayActive);
     }
 
-    private void EnableComponent<T>() where T : Behaviour
+    private void SetComponentEnabled<T>(bool isEnabled) where T : Behaviour
     {
         T component = persistentPlayer.GetComponent<T>();
         if (component != null)
-            component.enabled = true;
+            component.enabled = isEnabled;
     }
 
     private static void DisableComponent<T>(GameObject target) where T : Behaviour

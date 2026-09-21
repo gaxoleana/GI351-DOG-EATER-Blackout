@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Serialization;
 
 public class StabilitySystem : MonoBehaviour, IResourceStat
 {
@@ -33,22 +34,23 @@ public class StabilitySystem : MonoBehaviour, IResourceStat
         }
     }
 
-    [Header("Settings")]
-    [SerializeField] private StabilitySettings settings;
-
-    [Header("Fallback Settings")]
-    [Tooltip("Used only when Assets/Resources/StabilitySettings is missing.")]
-    [SerializeField] private WorldDefinition[] fallbackWorlds =
+    [Header("World Settings")]
+    [Tooltip("Each world managed by this Stability System and its maximum Stability.")]
+    [FormerlySerializedAs("fallbackWorlds")]
+    [SerializeField] private WorldDefinition[] worlds =
     {
         new WorldDefinition("SampleWorld1", 200f),
         new WorldDefinition("SampleWorld2", 600f),
         new WorldDefinition("SampleWorld3", 300f)
     };
 
-    [Tooltip("Used only when Assets/Resources/StabilitySettings is missing. 0.166667 means a world reaches 50% after 5 minutes.")]
-    [SerializeField, Min(0f)] private float fallbackPassiveDecayPercentPerSecond = 0.16666667f;
+    [Header("Passive Decay")]
+    [Tooltip("Percent of each world's maximum Stability lost every second. 0.166667 means a world reaches 50% after 5 minutes.")]
+    [FormerlySerializedAs("fallbackPassiveDecayPercentPerSecond")]
+    [SerializeField, Min(0f)] private float passiveDecayPercentPerSecond = 0.16666667f;
 
     private readonly Dictionary<string, WorldState> worldStates = new();
+    private readonly HashSet<UnityEngine.Object> passiveDecayPauseRequesters = new();
     private bool totalStabilityDepleted;
 
     public static StabilitySystem Instance { get; private set; }
@@ -60,6 +62,7 @@ public class StabilitySystem : MonoBehaviour, IResourceStat
 
     public float CurrentStability { get; private set; }
     public float MaxStability { get; private set; }
+    public bool IsPassiveDecayPaused => passiveDecayPauseRequesters.Count > 0;
 
     event Action<float, float> IResourceStat.OnChanged
     {
@@ -70,7 +73,7 @@ public class StabilitySystem : MonoBehaviour, IResourceStat
     float IResourceStat.Current => CurrentStability;
     float IResourceStat.Max => MaxStability;
 
-    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
+    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
     private static void CreateRuntimeInstance()
     {
         if (Instance != null)
@@ -90,17 +93,12 @@ public class StabilitySystem : MonoBehaviour, IResourceStat
 
         Instance = this;
         DontDestroyOnLoad(gameObject);
-        settings ??= Resources.Load<StabilitySettings>("StabilitySettings");
         InitializeWorlds();
     }
 
     private void Update()
     {
-        float passiveDecayPercentPerSecond = settings != null
-            ? settings.PassiveDecayPercentPerSecond
-            : fallbackPassiveDecayPercentPerSecond;
-
-        if (passiveDecayPercentPerSecond <= 0f || worldStates.Count == 0)
+        if (IsPassiveDecayPaused || passiveDecayPercentPerSecond <= 0f || worldStates.Count == 0)
             return;
 
         foreach (KeyValuePair<string, WorldState> entry in worldStates)
@@ -155,6 +153,46 @@ public class StabilitySystem : MonoBehaviour, IResourceStat
         }
     }
 
+    public void SetPassiveDecayPaused(UnityEngine.Object requester, bool isPaused)
+    {
+        if (requester == null)
+            return;
+
+        if (isPaused)
+            passiveDecayPauseRequesters.Add(requester);
+        else
+            passiveDecayPauseRequesters.Remove(requester);
+    }
+
+    public void RestoreActiveWorldsPercent(float percent)
+    {
+        if (percent <= 0f)
+            return;
+
+        List<KeyValuePair<string, WorldState>> restoredWorlds = new();
+
+        foreach (KeyValuePair<string, WorldState> entry in worldStates)
+        {
+            WorldState state = entry.Value;
+            if (state.IsBlackedOut)
+                continue;
+
+            float previous = state.Current;
+            state.Current = Mathf.Clamp(state.Current + state.Max * percent * 0.01f, 0f, state.Max);
+
+            if (!Mathf.Approximately(previous, state.Current))
+                restoredWorlds.Add(entry);
+        }
+
+        if (restoredWorlds.Count == 0)
+            return;
+
+        RefreshTotalStability();
+
+        foreach (KeyValuePair<string, WorldState> entry in restoredWorlds)
+            WorldStabilityChanged?.Invoke(entry.Key, entry.Value.Current, entry.Value.Max);
+    }
+
     public void ResetAllWorlds()
     {
         foreach (WorldState state in worldStates.Values)
@@ -175,16 +213,9 @@ public class StabilitySystem : MonoBehaviour, IResourceStat
         worldStates.Clear();
         MaxStability = 0f;
 
-        if (settings != null && settings.Worlds != null)
+        if (worlds != null)
         {
-            foreach (StabilitySettings.WorldDefinition definition in settings.Worlds)
-            {
-                AddWorldDefinition(definition.SceneName, definition.MaxStability);
-            }
-        }
-        else if (fallbackWorlds != null)
-        {
-            foreach (WorldDefinition definition in fallbackWorlds)
+            foreach (WorldDefinition definition in worlds)
             {
                 if (definition != null)
                     AddWorldDefinition(definition.SceneName, definition.MaxStability);
