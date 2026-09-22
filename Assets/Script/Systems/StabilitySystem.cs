@@ -26,6 +26,7 @@ public class StabilitySystem : MonoBehaviour, IResourceStat
         public readonly float Max;
         public float Current;
         public bool IsBlackedOut;
+        public bool IsCleared;
 
         public WorldState(float max)
         {
@@ -104,7 +105,7 @@ public class StabilitySystem : MonoBehaviour, IResourceStat
         foreach (KeyValuePair<string, WorldState> entry in worldStates)
         {
             WorldState state = entry.Value;
-            if (state.IsBlackedOut)
+            if (state.IsBlackedOut || state.IsCleared)
                 continue;
 
             float passiveLoss = state.Max * passiveDecayPercentPerSecond * 0.01f * Time.deltaTime;
@@ -129,6 +130,23 @@ public class StabilitySystem : MonoBehaviour, IResourceStat
     public bool IsWorldBlackedOut(string sceneName)
     {
         return worldStates.TryGetValue(sceneName, out WorldState state) && state.IsBlackedOut;
+    }
+
+    public bool IsWorldCleared(string sceneName)
+    {
+        return worldStates.TryGetValue(sceneName, out WorldState state) && state.IsCleared;
+    }
+
+    /// <summary>
+    /// Freezes a cleared world's Stability at its current value for the rest of this run.
+    /// </summary>
+    public void MarkWorldCleared(string sceneName)
+    {
+        if (!worldStates.TryGetValue(sceneName, out WorldState state) || state.IsCleared)
+            return;
+
+        state.IsCleared = true;
+        WorldStabilityChanged?.Invoke(sceneName, state.Current, state.Max);
     }
 
     public void ChangeWorldStability(string sceneName, float amount)
@@ -174,7 +192,7 @@ public class StabilitySystem : MonoBehaviour, IResourceStat
         foreach (KeyValuePair<string, WorldState> entry in worldStates)
         {
             WorldState state = entry.Value;
-            if (state.IsBlackedOut)
+            if (state.IsBlackedOut || state.IsCleared)
                 continue;
 
             float previous = state.Current;
@@ -199,6 +217,7 @@ public class StabilitySystem : MonoBehaviour, IResourceStat
         {
             state.Current = state.Max;
             state.IsBlackedOut = false;
+            state.IsCleared = false;
         }
 
         totalStabilityDepleted = false;

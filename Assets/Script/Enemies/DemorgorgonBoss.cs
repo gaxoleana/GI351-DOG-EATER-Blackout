@@ -6,11 +6,19 @@ public class DemorgorgonBoss : MonoBehaviour
 {
     private enum AttackType { Scratch, Dash, StraightBeam, SweepingBeam, Jump, Poison }
 
+    private static readonly int IsWalkParameter = Animator.StringToHash("isWalk");
+    private static readonly int IsAttackParameter = Animator.StringToHash("isAttack");
+    private const string IdleStateName = "idle";
+    private const string WalkStateName = "walk";
+    private const string AttackStateName = "attack";
+
     [Header("References")]
     [SerializeField] private Transform playerTransform;
     [SerializeField] private Transform mouthPoint;
     [SerializeField] private GameObject poisonPrefab;
     [SerializeField] private Animator animator;
+    [Tooltip("Keep enabled when the source sprite faces right. Disable it if the source art faces left.")]
+    [SerializeField] private bool spriteFacesRight = true;
 
     [Header("Phase")]
     [SerializeField] private bool enablePhaseTwo;
@@ -20,6 +28,7 @@ public class DemorgorgonBoss : MonoBehaviour
     [Header("Movement")]
     [SerializeField] private float movementSpeed = 2.5f;
     [SerializeField] private float movementStopDistance = 1.5f;
+    [SerializeField] private float attackStartDistance = 2f;
 
     [Header("Phase 1")]
     [SerializeField] private float dashCooldown = 3f;
@@ -59,6 +68,10 @@ public class DemorgorgonBoss : MonoBehaviour
     private Coroutine attackRoutine;
     private float nextAttackTime;
     private float nextDashTime;
+    private bool isMoving;
+    private bool isAttacking;
+    private bool isDashing;
+    private string activeAnimationState;
 
     public bool IsPhaseTwo => health != null && health.MaxHealth > 0f && health.CurrentHealth / health.MaxHealth <= phaseTwoHealthPercent;
 
@@ -67,6 +80,8 @@ public class DemorgorgonBoss : MonoBehaviour
         rb = GetComponent<Rigidbody>();
         health = GetComponent<EnemyHealth>();
         animator ??= GetComponent<Animator>();
+        if (animator != null && animator.layerCount > 0)
+            animator.SetLayerWeight(0, 1f);
         spriteRenderer = GetComponentInChildren<SpriteRenderer>();
         bossRenderers = GetComponentsInChildren<Renderer>(true);
         bossColliders = GetComponentsInChildren<Collider>(true);
@@ -76,17 +91,23 @@ public class DemorgorgonBoss : MonoBehaviour
     private void Update()
     {
         ResolvePlayer();
-        if (attackRoutine == null && Time.time >= nextAttackTime && playerTransform != null)
+        if (attackRoutine == null && Time.time >= nextAttackTime && IsPlayerWithin(attackStartDistance))
             attackRoutine = StartCoroutine(ChooseAndPerformAttack());
+
+        UpdateAnimationState();
     }
 
     private void FixedUpdate()
     {
-        if (rb == null || playerTransform == null || attackRoutine != null)
+        if (rb == null || playerTransform == null || (attackRoutine != null && !isDashing))
         {
             StopMoving();
             return;
         }
+
+        // Dash movement is handled by its attack coroutine.
+        if (isDashing)
+            return;
 
         Vector3 offset = playerTransform.position - rb.position;
         offset.y = 0f;
@@ -99,13 +120,18 @@ public class DemorgorgonBoss : MonoBehaviour
 
         Vector3 direction = offset.normalized;
         rb.MovePosition(rb.position + direction * movementSpeed * Time.fixedDeltaTime);
+        isMoving = true;
         FacePlayer(direction);
     }
 
     private IEnumerator ChooseAndPerformAttack()
     {
         nextAttackTime = Time.time + attackCooldown;
-        switch (SelectAttack())
+        AttackType attack = SelectAttack();
+        isAttacking = attack == AttackType.Scratch || attack == AttackType.Dash;
+        UpdateAnimationState();
+
+        switch (attack)
         {
             case AttackType.Scratch: yield return Scratch(); break;
             case AttackType.Dash: yield return Dash(); break;
@@ -114,6 +140,9 @@ public class DemorgorgonBoss : MonoBehaviour
             case AttackType.Jump: yield return Jump(); break;
             case AttackType.Poison: yield return Poison(); break;
         }
+
+        isAttacking = false;
+        UpdateAnimationState();
         attackRoutine = null;
     }
 
@@ -149,12 +178,14 @@ public class DemorgorgonBoss : MonoBehaviour
         float travelledDistance = 0f;
         float currentSpeed = movementSpeed;
         bool hasHitPlayer = false;
+        isDashing = true;
         while (travelledDistance < dashDistance)
         {
             currentSpeed = Mathf.MoveTowards(currentSpeed, dashSpeed, dashAcceleration * Time.deltaTime);
             float movement = Mathf.Min(currentSpeed * Time.deltaTime, dashDistance - travelledDistance);
             rb.MovePosition(rb.position + direction * movement);
             travelledDistance += movement;
+            isMoving = movement > 0f;
 
             if (!hasHitPlayer && IsPlayerTarget() && IsPlayerWithin(dashHitRadius))
             {
@@ -166,6 +197,7 @@ public class DemorgorgonBoss : MonoBehaviour
             yield return null;
         }
 
+        isDashing = false;
         StopMoving();
     }
 
@@ -222,7 +254,18 @@ public class DemorgorgonBoss : MonoBehaviour
         }
     }
 
-    private bool IsPlayerWithin(float radius) => playerTransform != null && (playerTransform.position - transform.position).sqrMagnitude <= radius * radius;
+    private bool IsPlayerWithin(float radius)
+    {
+        if (playerTransform == null)
+            return false;
+
+        // Movement happens on the X/Z ground plane, so attack range must use
+        // the same plane. Otherwise different root heights can prevent every
+        // attack even after the Boss has visibly reached the player.
+        Vector3 offset = playerTransform.position - transform.position;
+        offset.y = 0f;
+        return offset.sqrMagnitude <= radius * radius;
+    }
 
     private bool IsPlayerTarget()
     {
@@ -255,13 +298,41 @@ public class DemorgorgonBoss : MonoBehaviour
     private void FacePlayer(Vector3 direction)
     {
         if (spriteRenderer != null && Mathf.Abs(direction.x) > 0.001f)
-            spriteRenderer.flipX = direction.x < 0f;
+        {
+            bool playerIsToTheLeft = direction.x < 0f;
+            spriteRenderer.flipX = spriteFacesRight ? playerIsToTheLeft : !playerIsToTheLeft;
+        }
     }
 
     private void StopMoving()
     {
+        isMoving = false;
         if (rb != null)
             rb.linearVelocity = Vector3.zero;
+    }
+
+    private void UpdateAnimationState()
+    {
+        if (animator == null)
+            return;
+
+        animator.SetBool(IsWalkParameter, isMoving && !isAttacking);
+        animator.SetBool(IsAttackParameter, isAttacking);
+
+        string desiredState = isAttacking
+            ? AttackStateName
+            : isMoving
+                ? WalkStateName
+                : IdleStateName;
+
+        if (desiredState == activeAnimationState)
+            return;
+
+        // The Boss controller's parameter transitions can be bypassed by Unity's
+        // imported controller state. Playing the named state makes the visual
+        // state deterministic while the bools above remain available to it.
+        animator.Play(desiredState, 0, 0f);
+        activeAnimationState = desiredState;
     }
 
     private void ResolvePlayer()

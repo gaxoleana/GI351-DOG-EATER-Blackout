@@ -39,6 +39,15 @@ public class WorldStabilityBar : MonoBehaviour
         RefreshDisplay();
     }
 
+    private void Update()
+    {
+        if (stabilitySystem == null)
+        {
+            SubscribeToStabilitySystem();
+            RefreshDisplay();
+        }
+    }
+
     private void SubscribeToStabilitySystem()
     {
         if (stabilitySystem != null)
@@ -46,7 +55,10 @@ public class WorldStabilityBar : MonoBehaviour
 
         stabilitySystem = StabilitySystem.Instance;
         if (stabilitySystem != null)
+        {
             stabilitySystem.WorldStabilityChanged += HandleStabilityChanged;
+            RefreshDisplay();
+        }
     }
 
     private void UnsubscribeFromStabilitySystem()

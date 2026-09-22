@@ -11,12 +11,17 @@ public class WorldStability : MonoBehaviour, IResourceStat
     [SerializeField, Min(1f)] private float unstabilizerMultiplierPerMonster = 1f;
     [SerializeField, Min(1f)] private float maxUnstabilizerMultiplier = 3f;
 
+    [Header("World Completion")]
+    [Tooltip("The world's waves. Leave empty to find the WaveManager in this scene automatically.")]
+    [SerializeField] private WaveManager waveManager;
+
     private float scanTimer;
     private int aliveEnemyCount;
     private int aliveUnstabilizerCount;
     private string sceneName;
     private StabilitySystem stabilitySystem;
     private bool isSubscribed;
+    private bool isSubscribedToWaves;
 
     public event Action<float, float> OnStabilityChanged;
     public event Action StabilityDepleted;
@@ -52,6 +57,7 @@ public class WorldStability : MonoBehaviour, IResourceStat
     private void OnDisable()
     {
         EnemyHealth.AnyEnemyDied -= HandleEnemyDied;
+        UnsubscribeFromWaveManager();
         UnsubscribeFromStabilitySystem();
     }
 
@@ -72,6 +78,7 @@ public class WorldStability : MonoBehaviour, IResourceStat
         }
 
         NotifyStabilityChanged();
+        SubscribeToWaveManager();
 
         if (stabilitySystem.IsWorldBlackedOut(sceneName))
             StabilityDepleted?.Invoke();
@@ -79,6 +86,9 @@ public class WorldStability : MonoBehaviour, IResourceStat
 
     private void Update()
     {
+        if (stabilitySystem == null || stabilitySystem.IsWorldCleared(sceneName))
+            return;
+
         scanTimer -= Time.deltaTime;
         if (scanTimer <= 0f)
         {
@@ -134,6 +144,36 @@ public class WorldStability : MonoBehaviour, IResourceStat
     private void HandleEnemyDied(EnemyHealth enemy)
     {
         Restore(stabilityGainOnKill);
+    }
+
+    private void SubscribeToWaveManager()
+    {
+        if (isSubscribedToWaves)
+            return;
+
+        waveManager ??= FindAnyObjectByType<WaveManager>();
+        if (waveManager == null)
+            return;
+
+        waveManager.AllWavesCleared += HandleAllWavesCleared;
+        isSubscribedToWaves = true;
+
+        if (waveManager.IsComplete)
+            HandleAllWavesCleared();
+    }
+
+    private void UnsubscribeFromWaveManager()
+    {
+        if (!isSubscribedToWaves || waveManager == null)
+            return;
+
+        waveManager.AllWavesCleared -= HandleAllWavesCleared;
+        isSubscribedToWaves = false;
+    }
+
+    private void HandleAllWavesCleared()
+    {
+        stabilitySystem?.MarkWorldCleared(sceneName);
     }
 
     private void SubscribeToStabilitySystem()

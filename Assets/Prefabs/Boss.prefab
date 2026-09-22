@@ -198,6 +198,7 @@ MonoBehaviour:
   mouthPoint: {fileID: 0}
   poisonPrefab: {fileID: 0}
   animator: {fileID: 0}
+  spriteFacesRight: 0
   enablePhaseTwo: 1
   phaseTwoHealthPercent: 0.5
   attackCooldown: 2

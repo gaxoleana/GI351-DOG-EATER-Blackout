@@ -29061,6 +29061,124 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 891203072}
   m_Mesh: {fileID: 10206, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!1001 &892663994
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    serializedVersion: 3
+    m_TransformParent: {fileID: 0}
+    m_Modifications:
+    - target: {fileID: 1381660271085198481, guid: 73a61d5953484364ab0bde7a458d8c61, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: 11.25
+      objectReference: {fileID: 0}
+    - target: {fileID: 1381660271085198481, guid: 73a61d5953484364ab0bde7a458d8c61, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 2
+      objectReference: {fileID: 0}
+    - target: {fileID: 1381660271085198481, guid: 73a61d5953484364ab0bde7a458d8c61, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 20
+      objectReference: {fileID: 0}
+    - target: {fileID: 1381660271085198481, guid: 73a61d5953484364ab0bde7a458d8c61, type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 1381660271085198481, guid: 73a61d5953484364ab0bde7a458d8c61, type: 3}
+      propertyPath: m_LocalRotation.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1381660271085198481, guid: 73a61d5953484364ab0bde7a458d8c61, type: 3}
+      propertyPath: m_LocalRotation.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1381660271085198481, guid: 73a61d5953484364ab0bde7a458d8c61, type: 3}
+      propertyPath: m_LocalRotation.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1381660271085198481, guid: 73a61d5953484364ab0bde7a458d8c61, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1381660271085198481, guid: 73a61d5953484364ab0bde7a458d8c61, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1381660271085198481, guid: 73a61d5953484364ab0bde7a458d8c61, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3100228457931147437, guid: 73a61d5953484364ab0bde7a458d8c61, type: 3}
+      propertyPath: m_Name
+      value: Portal (4)
+      objectReference: {fileID: 0}
+    - target: {fileID: 4396179150569013401, guid: 73a61d5953484364ab0bde7a458d8c61, type: 3}
+      propertyPath: portal
+      value: 
+      objectReference: {fileID: 892663997}
+    - target: {fileID: 4396179150569013401, guid: 73a61d5953484364ab0bde7a458d8c61, type: 3}
+      propertyPath: barRoot
+      value: 
+      objectReference: {fileID: 892663995}
+    - target: {fileID: 4396179150569013401, guid: 73a61d5953484364ab0bde7a458d8c61, type: 3}
+      propertyPath: fillTransform
+      value: 
+      objectReference: {fileID: 892663996}
+    - target: {fileID: 9204493734501071069, guid: 73a61d5953484364ab0bde7a458d8c61, type: 3}
+      propertyPath: targetSceneName
+      value: BossArena
+      objectReference: {fileID: 0}
+    - target: {fileID: 9204493734501071069, guid: 73a61d5953484364ab0bde7a458d8c61, type: 3}
+      propertyPath: playerSpawnOffset.x
+      value: -2
+      objectReference: {fileID: 0}
+    - target: {fileID: 9204493734501071069, guid: 73a61d5953484364ab0bde7a458d8c61, type: 3}
+      propertyPath: playerSpawnOffset.z
+      value: -10
+      objectReference: {fileID: 0}
+    - target: {fileID: 9204493734501071069, guid: 73a61d5953484364ab0bde7a458d8c61, type: 3}
+      propertyPath: useCustomSpawnPoint
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 9204493734501071069, guid: 73a61d5953484364ab0bde7a458d8c61, type: 3}
+      propertyPath: destinationSpawnPosition.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 9204493734501071069, guid: 73a61d5953484364ab0bde7a458d8c61, type: 3}
+      propertyPath: destinationSpawnPosition.y
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 9204493734501071069, guid: 73a61d5953484364ab0bde7a458d8c61, type: 3}
+      propertyPath: destinationSpawnPosition.z
+      value: -10
+      objectReference: {fileID: 0}
+    m_RemovedComponents: []
+    m_RemovedGameObjects: []
+    m_AddedGameObjects: []
+    m_AddedComponents: []
+  m_SourcePrefab: {fileID: 100100000, guid: 73a61d5953484364ab0bde7a458d8c61, type: 3}
+--- !u!1 &892663995 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 7807131398541294190, guid: 73a61d5953484364ab0bde7a458d8c61, type: 3}
+  m_PrefabInstance: {fileID: 892663994}
+  m_PrefabAsset: {fileID: 0}
+--- !u!4 &892663996 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 8743346535732981496, guid: 73a61d5953484364ab0bde7a458d8c61, type: 3}
+  m_PrefabInstance: {fileID: 892663994}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &892663997 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 9204493734501071069, guid: 73a61d5953484364ab0bde7a458d8c61, type: 3}
+  m_PrefabInstance: {fileID: 892663994}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9a4e1c7d3b5f46a8c0d2e6f1b7a59384, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ScenePortal
 --- !u!1 &894076175
 GameObject:
   m_ObjectHideFlags: 0
@@ -32564,6 +32682,8 @@ MonoBehaviour:
   worlds:
   - sceneName: Map1
     maxStability: 500
+  - sceneName: BossArena
+    maxStability: 1000
   passiveDecayPercentPerSecond: 0.16666667
 --- !u!1001 &992290123
 PrefabInstance:
@@ -71587,5 +71707,6 @@ SceneRoots:
   - {fileID: 899401060}
   - {fileID: 7341581}
   - {fileID: 1310559939}
+  - {fileID: 892663994}
   - {fileID: 1600926703}
   - {fileID: 266027905}
