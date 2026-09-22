@@ -18,7 +18,7 @@ GameObject:
   - component: {fileID: 8273233397453217573}
   m_Layer: 0
   m_Name: Boss
-  m_TagString: Player
+  m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -90,12 +90,12 @@ SpriteRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 1
   m_MaskInteraction: 0
-  m_Sprite: {fileID: 958602380, guid: 9f0b836666d94fe478117156d6a477a0, type: 3}
-  m_Color: {r: 1, g: 0, b: 0.004923463, a: 1}
+  m_Sprite: {fileID: -2136825813, guid: 1de9a3e7ca1ed094b9bb1ed60c6359ea, type: 3}
+  m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
   m_FlipY: 0
   m_DrawMode: 0
-  m_Size: {x: 4, y: 4}
+  m_Size: {x: 1.6006501, y: 4.4}
   m_AdaptiveModeThreshold: 0.5
   m_SpriteTileMode: 0
   m_WasSpriteAssigned: 1
@@ -147,8 +147,8 @@ BoxCollider:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
-  m_Size: {x: 1, y: 2, z: 1}
-  m_Center: {x: 0, y: 0, z: 0}
+  m_Size: {x: 1.6006501, y: 3.52, z: 1}
+  m_Center: {x: 0, y: 2.2000005, z: 0}
 --- !u!114 &316092760600644479
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -236,7 +236,7 @@ Animator:
   m_GameObject: {fileID: 440972991372361943}
   m_Enabled: 1
   m_Avatar: {fileID: 0}
-  m_Controller: {fileID: 9100000, guid: fe09eaa3fbecd454ab2bbe858fe5afe3, type: 2}
+  m_Controller: {fileID: 9100000, guid: dd2c1fdf34c7f034b82f6e997a90871a, type: 2}
   m_CullingMode: 0
   m_UpdateMode: 0
   m_ApplyRootMotion: 0
@@ -490,8 +490,8 @@ Transform:
   m_GameObject: {fileID: 8505998277666137948}
   serializedVersion: 2
   m_LocalRotation: {x: -0.70710695, y: -0, z: -0, w: 0.70710665}
-  m_LocalPosition: {x: 0, y: -0.98, z: 0}
-  m_LocalScale: {x: 1.5, y: 1, z: 1}
+  m_LocalPosition: {x: 0, y: 0.52, z: 0}
+  m_LocalScale: {x: 2.5, y: 2, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 1700613147253297339}

@@ -135,7 +135,7 @@ public class DemorgorgonBoss : MonoBehaviour
         BossAttackTelegraph telegraph = BossAttackTelegraph.CreateCircle(transform.position, scratchRange, scratchTelegraphDuration, telegraphColor);
         yield return Charge(telegraph, scratchTelegraphDuration);
         if (IsPlayerWithin(scratchRange))
-            playerDamageable?.TakeDamage(scratchDamage);
+            playerDamageable?.TakeDamage(scratchDamage * BlackoutZoneController.GetEnemyDamageMultiplier(this));
     }
 
     private IEnumerator Dash()
@@ -158,7 +158,7 @@ public class DemorgorgonBoss : MonoBehaviour
 
             if (!hasHitPlayer && IsPlayerTarget() && IsPlayerWithin(dashHitRadius))
             {
-                playerDamageable?.TakeDamage(dashDamage);
+                playerDamageable?.TakeDamage(dashDamage * BlackoutZoneController.GetEnemyDamageMultiplier(this));
                 hasHitPlayer = true;
                 break;
             }
@@ -176,7 +176,7 @@ public class DemorgorgonBoss : MonoBehaviour
         BossAttackTelegraph telegraph = BossAttackTelegraph.CreateLine(origin, direction, straightBeamLength, straightBeamWidth, phaseTwoTelegraphDuration, telegraphColor);
         yield return Charge(telegraph, phaseTwoTelegraphDuration);
         if (IsPlayerInsideLine(origin, direction, straightBeamLength, straightBeamWidth))
-            playerDamageable?.TakeDamage(straightBeamDamage);
+            playerDamageable?.TakeDamage(straightBeamDamage * BlackoutZoneController.GetEnemyDamageMultiplier(this));
     }
 
     private IEnumerator SweepingBeam()
@@ -185,7 +185,7 @@ public class DemorgorgonBoss : MonoBehaviour
         BossAttackTelegraph telegraph = BossAttackTelegraph.CreateFan(transform.position, direction, sweepingBeamRadius, sweepingBeamAngle, phaseTwoTelegraphDuration, telegraphColor);
         yield return Charge(telegraph, phaseTwoTelegraphDuration);
         if (IsPlayerInsideFan(direction, sweepingBeamRadius, sweepingBeamAngle))
-            playerDamageable?.TakeDamage(sweepingBeamDamage);
+            playerDamageable?.TakeDamage(sweepingBeamDamage * BlackoutZoneController.GetEnemyDamageMultiplier(this));
     }
 
     private IEnumerator Jump()
@@ -198,7 +198,7 @@ public class DemorgorgonBoss : MonoBehaviour
         transform.position = landingPosition;
         SetBossVisible(true);
         if (IsPlayerWithin(jumpRadius))
-            playerDamageable?.TakeDamage(jumpDamage);
+            playerDamageable?.TakeDamage(jumpDamage * BlackoutZoneController.GetEnemyDamageMultiplier(this));
     }
 
     private IEnumerator Poison()

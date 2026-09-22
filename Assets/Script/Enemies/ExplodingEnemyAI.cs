@@ -73,7 +73,7 @@ public class ExplodingEnemyAI : RoamingEnemyBase
         rb.linearVelocity = Vector3.zero;
         animator?.SetBool(IsExplodingParameter, true);
         playerController?.Stun(playerStunDuration);
-        playerDamageable?.TakeDamage(explosionDamage);
+        playerDamageable?.TakeDamage(explosionDamage * BlackoutZoneController.GetEnemyDamageMultiplier(this));
     }
 
     private void OnCollisionEnter(Collision collision)

@@ -28,7 +28,7 @@ public class BossPoisonHazard : MonoBehaviour
         if (nextDamageTime.TryGetValue(damageable, out float nextTime) && currentTime < nextTime)
             return;
 
-        damageable.TakeDamage(damage);
+        damageable.TakeDamage(damage * BlackoutZoneController.GetEnemyDamageMultiplier(this));
         nextDamageTime[damageable] = currentTime + tickInterval;
     }
 

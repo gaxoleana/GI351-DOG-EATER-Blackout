@@ -1,12 +1,14 @@
 using TMPro;
 using UnityEngine;
-using UnityEngine.InputSystem;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
 public class PlayerUpgradeUI : MonoBehaviour
 {
     private static PlayerUpgradeUI instance;
+
+    public static PlayerUpgradeUI Instance => instance;
+    public bool IsMenuOpen => isMenuOpen;
 
     [Header("Menu")]
     [SerializeField] private GameObject menuPanel;
@@ -103,11 +105,20 @@ public class PlayerUpgradeUI : MonoBehaviour
 
     private void Update()
     {
-        if (Keyboard.current?.iKey.wasPressedThisFrame == true)
-            SetMenuVisible(!isMenuOpen);
-
         if (upgradeSystem == null || currency == null || stabilitySystem != StabilitySystem.Instance)
             BindPlayer();
+    }
+
+    public void OpenMenu()
+    {
+        BindPlayer();
+        RefreshDisplay();
+        SetMenuVisible(true);
+    }
+
+    public void CloseMenu()
+    {
+        SetMenuVisible(false);
     }
 
     public void UpgradeSanityCharge()

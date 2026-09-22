@@ -4,6 +4,8 @@ using UnityEngine.Rendering.Universal;
 
 public class PanicVignetteUI : MonoBehaviour
 {
+    private static readonly System.Collections.Generic.List<PanicVignetteUI> activeInstances = new();
+
     [Header("References")]
     [SerializeField] private PlayerPanic playerPanic;
     [SerializeField] private Volume globalVolume;
@@ -27,6 +29,22 @@ public class PanicVignetteUI : MonoBehaviour
 
     private Vignette vignette;
     private float visualPanic;
+
+    public static bool HasInstanceInScene(UnityEngine.SceneManagement.Scene scene)
+    {
+        foreach (PanicVignetteUI instance in activeInstances)
+        {
+            if (instance != null && instance.gameObject.scene == scene)
+                return true;
+        }
+
+        return false;
+    }
+
+    private void OnEnable()
+    {
+        activeInstances.Add(this);
+    }
 
     private void Awake()
     {
@@ -56,6 +74,12 @@ public class PanicVignetteUI : MonoBehaviour
         float panicIntensity = Mathf.Lerp(baseVignetteIntensity, maximumVignetteIntensity, visualPanic);
         float panicSmoothness = Mathf.Lerp(baseVignetteSmoothness, maximumVignetteSmoothness, visualPanic);
         float blackoutIntensity = GetBlackoutIntensity();
+        float blackoutSmoothness = this.blackoutSmoothness;
+        if (BlackoutZoneController.TryGetForScene(gameObject.scene, out BlackoutZoneController blackoutController))
+        {
+            blackoutIntensity = blackoutController.CurrentVignetteIntensity;
+            blackoutSmoothness = blackoutController.CurrentVignetteSmoothness;
+        }
 
         if (vignette != null)
         {
@@ -68,6 +92,7 @@ public class PanicVignetteUI : MonoBehaviour
 
     private void OnDisable()
     {
+        activeInstances.Remove(this);
         visualPanic = 0f;
 
         if (vignette != null)

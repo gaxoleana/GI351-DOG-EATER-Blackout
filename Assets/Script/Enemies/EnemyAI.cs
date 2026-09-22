@@ -61,7 +61,7 @@ public class EnemyAI : RoamingEnemyBase
 
             if (attackDamageTimer <= 0f)
             {
-                playerDamageable?.TakeDamage(attackDamage);
+                playerDamageable?.TakeDamage(attackDamage * BlackoutZoneController.GetEnemyDamageMultiplier(this));
                 attackDamagePending = false;
             }
         }

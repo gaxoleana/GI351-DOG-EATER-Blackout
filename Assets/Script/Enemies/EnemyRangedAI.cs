@@ -107,7 +107,7 @@ public class EnemyRangedAI : RoamingEnemyBase
         projectile.Launch(
             direction,
             projectileSpeed,
-            projectileDamage,
+            projectileDamage * BlackoutZoneController.GetEnemyDamageMultiplier(this),
             projectileLifetime,
             gameObject
         );
