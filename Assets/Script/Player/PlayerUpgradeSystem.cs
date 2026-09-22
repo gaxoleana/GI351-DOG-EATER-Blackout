@@ -15,6 +15,7 @@ public class PlayerUpgradeSystem : MonoBehaviour
     [SerializeField, Min(1)] private long upgradeCost = 1;
 
     [Header("Upgrade Levels")]
+    [SerializeField, Min(1)] private int maxUpgradeLevel = 20;
     [SerializeField, Min(0)] private int sanityChargeLevel;
     [SerializeField, Min(0)] private int sanityShieldLevel;
     [SerializeField, Min(0)] private int laserLevel;
@@ -39,6 +40,18 @@ public class PlayerUpgradeSystem : MonoBehaviour
     public int LaserLevel => laserLevel;
     public int SanityRunLevel => sanityRunLevel;
     public long UpgradeCost => upgradeCost;
+    public int MaxUpgradeLevel => maxUpgradeLevel;
+
+    // Values below are the total benefit from the player's current upgrade levels.
+    // They are exposed for UI only, so the overview always reflects the same values
+    // that the ability scripts use in-game.
+    public float SanityRechargeBonusPercent => sanityChargeLevel * sanityRechargeBonusPerLevel * 100f;
+    public float SanityDrainReductionPercent => sanityChargeLevel * sanityDrainReductionPerLevel;
+    public float ShieldSpeedBonusPercent => sanityShieldLevel * shieldSpeedBonusPerLevel * 100f;
+    public float ShieldHitCostReductionPercent => sanityShieldLevel * shieldHitCostReductionPerLevel;
+    public float LaserCostReductionPercent => laserLevel * laserCostReductionPerLevel;
+    public float LaserCooldownReductionSeconds => laserLevel * laserCooldownReductionPerLevel;
+    public float SanityRunSpeedBonusPercent => sanityRunLevel * sanityRunSpeedBonusPerLevel * 100f;
 
     private void Awake()
     {
@@ -60,13 +73,23 @@ public class PlayerUpgradeSystem : MonoBehaviour
     public bool TryUpgrade(PlayerUpgradeNode node)
     {
         currency ??= GetComponent<FragmentCurrency>();
-        if (currency == null || !currency.TrySpend(upgradeCost))
+        if (currency == null || IsMaxLevel(node) || !currency.TrySpend(upgradeCost))
             return false;
 
         int level = GetLevel(node) + 1;
         SetLevel(node, level);
         OnUpgradeChanged?.Invoke(node, level);
         return true;
+    }
+
+    public bool IsMaxLevel(PlayerUpgradeNode node)
+    {
+        return GetLevel(node) >= maxUpgradeLevel;
+    }
+
+    public bool CanUpgrade(PlayerUpgradeNode node, long availableFragments)
+    {
+        return !IsMaxLevel(node) && availableFragments >= upgradeCost;
     }
 
     public float GetSanityRechargeMultiplier()
