@@ -26,6 +26,9 @@ public class DemorgorgonBoss : MonoBehaviour
     [SerializeField] private float scratchRange = 2f;
     [SerializeField] private float scratchDamage = 20f;
     [SerializeField] private float dashDistance = 5f;
+    [SerializeField] private float dashSpeed = 14f;
+    [SerializeField] private float dashAcceleration = 35f;
+    [SerializeField] private float dashHitRadius = 1.3f;
     [SerializeField] private float dashDamage = 30f;
 
     [Header("Phase 2")]
@@ -129,7 +132,7 @@ public class DemorgorgonBoss : MonoBehaviour
     private IEnumerator Scratch()
     {
         FacePlayer(GetDirectionToPlayer());
-        BossAttackTelegraph telegraph = BossAttackTelegraph.CreateVerticalCircle(transform.position, GetDirectionToPlayer(), scratchRange, scratchTelegraphDuration, telegraphColor);
+        BossAttackTelegraph telegraph = BossAttackTelegraph.CreateCircle(transform.position, scratchRange, scratchTelegraphDuration, telegraphColor);
         yield return Charge(telegraph, scratchTelegraphDuration);
         if (IsPlayerWithin(scratchRange))
             playerDamageable?.TakeDamage(scratchDamage);
@@ -143,18 +146,27 @@ public class DemorgorgonBoss : MonoBehaviour
         BossAttackTelegraph telegraph = BossAttackTelegraph.CreateLine(transform.position, direction, dashDistance, 0.9f, dashTelegraphDuration, telegraphColor);
         yield return Charge(telegraph, dashTelegraphDuration);
 
-        Vector3 start = transform.position;
-        Vector3 destination = start + direction * dashDistance;
-        float timer = 0f;
-        while (timer < 0.25f)
+        float travelledDistance = 0f;
+        float currentSpeed = movementSpeed;
+        bool hasHitPlayer = false;
+        while (travelledDistance < dashDistance)
         {
-            timer += Time.deltaTime;
-            rb.MovePosition(Vector3.Lerp(start, destination, timer / 0.25f));
+            currentSpeed = Mathf.MoveTowards(currentSpeed, dashSpeed, dashAcceleration * Time.deltaTime);
+            float movement = Mathf.Min(currentSpeed * Time.deltaTime, dashDistance - travelledDistance);
+            rb.MovePosition(rb.position + direction * movement);
+            travelledDistance += movement;
+
+            if (!hasHitPlayer && IsPlayerTarget() && IsPlayerWithin(dashHitRadius))
+            {
+                playerDamageable?.TakeDamage(dashDamage);
+                hasHitPlayer = true;
+                break;
+            }
+
             yield return null;
         }
 
-        if (IsPlayerWithin(1.3f))
-            playerDamageable?.TakeDamage(dashDamage);
+        StopMoving();
     }
 
     private IEnumerator StraightBeam()
@@ -212,6 +224,11 @@ public class DemorgorgonBoss : MonoBehaviour
 
     private bool IsPlayerWithin(float radius) => playerTransform != null && (playerTransform.position - transform.position).sqrMagnitude <= radius * radius;
 
+    private bool IsPlayerTarget()
+    {
+        return playerTransform != null && playerTransform.CompareTag("Player");
+    }
+
     private bool IsPlayerInsideLine(Vector3 origin, Vector3 direction, float length, float width)
     {
         Vector3 offset = playerTransform.position - origin;
@@ -249,7 +266,7 @@ public class DemorgorgonBoss : MonoBehaviour
 
     private void ResolvePlayer()
     {
-        if (playerTransform == null)
+        if (playerTransform == null || !playerTransform.CompareTag("Player"))
         {
             GameObject playerObject = GameObject.FindGameObjectWithTag("Player");
             if (playerObject != null)

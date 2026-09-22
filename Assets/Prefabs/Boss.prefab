@@ -18,7 +18,7 @@ GameObject:
   - component: {fileID: 8273233397453217573}
   m_Layer: 0
   m_Name: Boss
-  m_TagString: Untagged
+  m_TagString: Player
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -206,7 +206,10 @@ MonoBehaviour:
   dashCooldown: 3
   scratchRange: 2
   scratchDamage: 20
-  dashDistance: 5
+  dashDistance: 10
+  dashSpeed: 20
+  dashAcceleration: 35
+  dashHitRadius: 1.3
   dashDamage: 30
   straightBeamDamage: 40
   straightBeamLength: 9
