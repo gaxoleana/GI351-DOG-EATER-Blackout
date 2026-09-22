@@ -204,6 +204,7 @@ MonoBehaviour:
   attackCooldown: 2
   movementSpeed: 2.5
   movementStopDistance: 1.5
+  attackStartDistance: 2
   dashCooldown: 3
   scratchRange: 2
   scratchDamage: 20
