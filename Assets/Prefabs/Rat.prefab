@@ -18,7 +18,7 @@ GameObject:
   - component: {fileID: 8852781826371524152}
   m_Layer: 0
   m_Name: Rat
-  m_TagString: Untagged
+  m_TagString: Enemy
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -164,6 +164,7 @@ MonoBehaviour:
   fragmentPrefab: {fileID: 5020714297648912693, guid: 98d18f64f0b48fc44afd2e2d0d88282d, type: 3}
   fragmentDropChance: 0.6
   fragmentAmount: 1
+  hurtFlashFrameDuration: 10
 --- !u!114 &1961738137817312713
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -203,6 +204,7 @@ MonoBehaviour:
   attackDamage: 10
   attackCooldown: 1.5
   attackAnimationDuration: 0.4
+  attackStateName: rat-attack
 --- !u!95 &8852781826371524152
 Animator:
   serializedVersion: 7

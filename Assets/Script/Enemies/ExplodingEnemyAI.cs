@@ -8,10 +8,14 @@ public class ExplodingEnemyAI : RoamingEnemyBase
     private const string IsWalkingParameter = "isWalk";
     private const string IsExplodingParameter = "isExplode";
 
-    [Header("Explosion")]
+    [Header("Explosion Settings")]
     [SerializeField] private float explosionDamage = 75f;
     [SerializeField] private float explosionAnimationDuration = 0.5f;
     [SerializeField] private float playerStunDuration = 3f;
+
+    [Header("Explosion Audio")]
+    [SerializeField] private AudioClip explosionSFX;
+    [SerializeField, Range(0f, 1f)] private float explosionVolume = 1f;
 
     private Animator animator;
     private State currentState = State.Roaming;
@@ -31,7 +35,6 @@ public class ExplodingEnemyAI : RoamingEnemyBase
             playerDamageable ??= playerTransform.GetComponent<PlayerHealth>();
             playerController = playerTransform.GetComponent<PlayerController>();
         }
-
     }
 
     private void Update()
@@ -71,6 +74,13 @@ public class ExplodingEnemyAI : RoamingEnemyBase
         currentState = State.Exploding;
         explosionTimer = Mathf.Max(0f, explosionAnimationDuration);
         rb.linearVelocity = Vector3.zero;
+
+        // เล่นเสียงระเบิดแบบ 3D ณ ตำแหน่งระเบิด
+        if (explosionSFX != null)
+        {
+            AudioSource.PlayClipAtPoint(explosionSFX, transform.position, explosionVolume);
+        }
+
         animator?.SetBool(IsExplodingParameter, true);
         playerController?.Stun(playerStunDuration);
         playerDamageable?.TakeDamage(explosionDamage * BlackoutZoneController.GetEnemyDamageMultiplier(this));
@@ -121,6 +131,5 @@ public class ExplodingEnemyAI : RoamingEnemyBase
     {
         Gizmos.color = Color.yellow;
         Gizmos.DrawWireSphere(transform.position, detectionRadius);
-
     }
 }

@@ -111,7 +111,7 @@ GameObject:
   - component: {fileID: 4200630322864543143}
   m_Layer: 0
   m_Name: TankZomboii
-  m_TagString: Untagged
+  m_TagString: Enemy
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -182,6 +182,7 @@ MonoBehaviour:
   attackDamage: 10
   attackCooldown: 1.5
   attackAnimationDuration: 0.5
+  attackStateName: rat-attack
 --- !u!114 &7739519975772301986
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -198,6 +199,7 @@ MonoBehaviour:
   fragmentPrefab: {fileID: 0}
   fragmentDropChance: 0.6
   fragmentAmount: 1
+  hurtFlashFrameDuration: 10
 --- !u!114 &2665691768504776249
 MonoBehaviour:
   m_ObjectHideFlags: 0

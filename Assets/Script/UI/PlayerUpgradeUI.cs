@@ -10,6 +10,10 @@ public class PlayerUpgradeUI : MonoBehaviour
     public static PlayerUpgradeUI Instance => instance;
     public bool IsMenuOpen => isMenuOpen;
 
+    [Header("Audio")]
+    [SerializeField] private AudioSource uiAudioSource;
+    [SerializeField] private AudioClip upgradeSuccessSFX;
+
     [Header("Menu")]
     [SerializeField] private GameObject menuPanel;
     [SerializeField] private bool pauseGameplay = true;
@@ -28,31 +32,22 @@ public class PlayerUpgradeUI : MonoBehaviour
     [SerializeField] private string levelFormat = "LEVEL {0}";
 
     [Header("Upgrade Description Text")]
-    [Tooltip("Optional TMP descriptions shown beside each upgrade button. They update to the current total bonus.")]
     [SerializeField] private TMP_Text sanityChargeDescriptionText;
     [SerializeField] private TMP_Text sanityShieldDescriptionText;
     [SerializeField] private TMP_Text laserDescriptionText;
     [SerializeField] private TMP_Text sanityRunDescriptionText;
-    [SerializeField, TextArea(2, 4)] private string sanityChargeDescriptionFormat =
-        "RECHARGE +{0:0.#}%  |  DRAIN -{1:0.#}%";
-    [SerializeField, TextArea(2, 4)] private string sanityShieldDescriptionFormat =
-        "SHIELD SPEED +{0:0.#}%  |  HIT COST -{1:0.#}%";
-    [SerializeField, TextArea(2, 4)] private string laserDescriptionFormat =
-        "COST -{0:0.#}%  |  COOLDOWN -{1:0.##}s";
-    [SerializeField, TextArea(2, 4)] private string sanityRunDescriptionFormat =
-        "RUN SPEED +{0:0.#}%";
+    [SerializeField, TextArea(2, 4)] private string sanityChargeDescriptionFormat = "RECHARGE +{0:0.#}%  |  DRAIN -{1:0.#}%";
+    [SerializeField, TextArea(2, 4)] private string sanityShieldDescriptionFormat = "SHIELD SPEED +{0:0.#}%  |  HIT COST -{1:0.#}%";
+    [SerializeField, TextArea(2, 4)] private string laserDescriptionFormat = "COST -{0:0.#}%  |  COOLDOWN -{1:0.##}s";
+    [SerializeField, TextArea(2, 4)] private string sanityRunDescriptionFormat = "RUN SPEED +{0:0.#}%";
 
     [Header("Current Stats")]
-    [Tooltip("Optional live stat text. {0}=HP %, {1}=Sanity %, {2}=total Stability %, {3}=Fragments.")]
     [SerializeField] private TMP_Text currentStatsText;
-    [SerializeField, TextArea(3, 8)] private string currentStatsFormat =
-        "HP: {0}/100\nSANITY: {1}/100\nSTABILITY: {2}/100\nFRAGMENT: {3}";
+    [SerializeField, TextArea(3, 8)] private string currentStatsFormat = "HP: {0}/100\nSANITY: {1}/100\nSTABILITY: {2}/100\nFRAGMENT: {3}";
 
     [Header("Overview Stats")]
-    [Tooltip("Optional upgrade overview text, suitable for a HUD such as the lower-left corner. The values are the current total bonuses; see the default format for placeholder order.")]
     [SerializeField] private TMP_Text overviewStatsText;
-    [SerializeField, TextArea(3, 8)] private string overviewStatsFormat =
-        "SANITY: RECHARGE +{0:0.#}% | DRAIN -{1:0.#}%\nSHIELD: SPEED +{2:0.#}% | HIT -{3:0.#}%\nLASER: COST -{4:0.#}% | CD -{5:0.##}s\nRUN: SPEED +{6:0.#}%";
+    [SerializeField, TextArea(3, 8)] private string overviewStatsFormat = "SANITY: RECHARGE +{0:0.#}% | DRAIN -{1:0.#}%\nSHIELD: SPEED +{2:0.#}% | HIT -{3:0.#}%\nLASER: COST -{4:0.#}% | CD -{5:0.##}s\nRUN: SPEED +{6:0.#}%";
 
     private PlayerUpgradeSystem upgradeSystem;
     private FragmentCurrency currency;
@@ -71,6 +66,10 @@ public class PlayerUpgradeUI : MonoBehaviour
 
         instance = this;
         DontDestroyOnLoad(gameObject);
+
+        if (uiAudioSource == null)
+            uiAudioSource = GetComponent<AudioSource>();
+
         BindButtons();
         SetMenuVisible(false);
     }
@@ -121,30 +120,22 @@ public class PlayerUpgradeUI : MonoBehaviour
         SetMenuVisible(false);
     }
 
-    public void UpgradeSanityCharge()
-    {
-        TryUpgrade(PlayerUpgradeNode.SanityCharge);
-    }
-
-    public void UpgradeSanityShield()
-    {
-        TryUpgrade(PlayerUpgradeNode.SanityShield);
-    }
-
-    public void UpgradeLaser()
-    {
-        TryUpgrade(PlayerUpgradeNode.Laser);
-    }
-
-    public void UpgradeSanityRun()
-    {
-        TryUpgrade(PlayerUpgradeNode.SanityRun);
-    }
+    public void UpgradeSanityCharge() => TryUpgrade(PlayerUpgradeNode.SanityCharge);
+    public void UpgradeSanityShield() => TryUpgrade(PlayerUpgradeNode.SanityShield);
+    public void UpgradeLaser() => TryUpgrade(PlayerUpgradeNode.Laser);
+    public void UpgradeSanityRun() => TryUpgrade(PlayerUpgradeNode.SanityRun);
 
     private void TryUpgrade(PlayerUpgradeNode node)
     {
         BindPlayer();
-        upgradeSystem?.TryUpgrade(node);
+        if (upgradeSystem != null && upgradeSystem.TryUpgrade(node))
+        {
+            // เล่นเสียงเมื่ออัปเกรดสำเร็จ
+            if (uiAudioSource != null && upgradeSuccessSFX != null)
+            {
+                uiAudioSource.PlayOneShot(upgradeSuccessSFX);
+            }
+        }
         RefreshDisplay();
     }
 
@@ -192,30 +183,20 @@ public class PlayerUpgradeUI : MonoBehaviour
         sanityStat = nextSanityStat;
         stabilitySystem = nextStabilitySystem;
 
-        if (upgradeSystem != null)
-            upgradeSystem.OnUpgradeChanged += HandleUpgradeChanged;
-        if (currency != null)
-            currency.OnFragmentsChanged += HandleFragmentsChanged;
-        if (healthStat != null)
-            healthStat.OnChanged += HandleCurrentStatChanged;
-        if (sanityStat != null)
-            sanityStat.OnChanged += HandleCurrentStatChanged;
-        if (stabilitySystem != null)
-            stabilitySystem.TotalStabilityChanged += HandleCurrentStatChanged;
+        if (upgradeSystem != null) upgradeSystem.OnUpgradeChanged += HandleUpgradeChanged;
+        if (currency != null) currency.OnFragmentsChanged += HandleFragmentsChanged;
+        if (healthStat != null) healthStat.OnChanged += HandleCurrentStatChanged;
+        if (sanityStat != null) sanityStat.OnChanged += HandleCurrentStatChanged;
+        if (stabilitySystem != null) stabilitySystem.TotalStabilityChanged += HandleCurrentStatChanged;
     }
 
     private void UnbindPlayer()
     {
-        if (upgradeSystem != null)
-            upgradeSystem.OnUpgradeChanged -= HandleUpgradeChanged;
-        if (currency != null)
-            currency.OnFragmentsChanged -= HandleFragmentsChanged;
-        if (healthStat != null)
-            healthStat.OnChanged -= HandleCurrentStatChanged;
-        if (sanityStat != null)
-            sanityStat.OnChanged -= HandleCurrentStatChanged;
-        if (stabilitySystem != null)
-            stabilitySystem.TotalStabilityChanged -= HandleCurrentStatChanged;
+        if (upgradeSystem != null) upgradeSystem.OnUpgradeChanged -= HandleUpgradeChanged;
+        if (currency != null) currency.OnFragmentsChanged -= HandleFragmentsChanged;
+        if (healthStat != null) healthStat.OnChanged -= HandleCurrentStatChanged;
+        if (sanityStat != null) sanityStat.OnChanged -= HandleCurrentStatChanged;
+        if (stabilitySystem != null) stabilitySystem.TotalStabilityChanged -= HandleCurrentStatChanged;
 
         upgradeSystem = null;
         currency = null;
@@ -224,10 +205,7 @@ public class PlayerUpgradeUI : MonoBehaviour
         stabilitySystem = null;
     }
 
-    private void HandleUpgradeChanged(PlayerUpgradeNode node, int level)
-    {
-        RefreshDisplay();
-    }
+    private void HandleUpgradeChanged(PlayerUpgradeNode node, int level) => RefreshDisplay();
 
     private void HandleFragmentsChanged(long amount)
     {
@@ -235,25 +213,14 @@ public class PlayerUpgradeUI : MonoBehaviour
         RefreshStatsText();
     }
 
-    private void HandleCurrentStatChanged(float current, float max)
-    {
-        RefreshStatsText();
-    }
+    private void HandleCurrentStatChanged(float current, float max) => RefreshStatsText();
 
     private void RefreshDisplay()
     {
-        int sanityChargeLevel = upgradeSystem != null
-            ? upgradeSystem.SanityChargeLevel
-            : 0;
-        int sanityShieldLevel = upgradeSystem != null
-            ? upgradeSystem.SanityShieldLevel
-            : 0;
-        int laserLevel = upgradeSystem != null
-            ? upgradeSystem.LaserLevel
-            : 0;
-        int sanityRunLevel = upgradeSystem != null
-            ? upgradeSystem.SanityRunLevel
-            : 0;
+        int sanityChargeLevel = upgradeSystem != null ? upgradeSystem.SanityChargeLevel : 0;
+        int sanityShieldLevel = upgradeSystem != null ? upgradeSystem.SanityShieldLevel : 0;
+        int laserLevel = upgradeSystem != null ? upgradeSystem.LaserLevel : 0;
+        int sanityRunLevel = upgradeSystem != null ? upgradeSystem.SanityRunLevel : 0;
 
         SetLevelText(sanityChargeLevelText, sanityChargeLevel);
         SetLevelText(sanityShieldLevelText, sanityShieldLevel);
@@ -272,14 +239,10 @@ public class PlayerUpgradeUI : MonoBehaviour
 
     private void RefreshButtonState(long fragments)
     {
-        if (sanityChargeButton != null)
-            sanityChargeButton.interactable = CanUpgrade(PlayerUpgradeNode.SanityCharge, fragments);
-        if (sanityShieldButton != null)
-            sanityShieldButton.interactable = CanUpgrade(PlayerUpgradeNode.SanityShield, fragments);
-        if (laserButton != null)
-            laserButton.interactable = CanUpgrade(PlayerUpgradeNode.Laser, fragments);
-        if (sanityRunButton != null)
-            sanityRunButton.interactable = CanUpgrade(PlayerUpgradeNode.SanityRun, fragments);
+        if (sanityChargeButton != null) sanityChargeButton.interactable = CanUpgrade(PlayerUpgradeNode.SanityCharge, fragments);
+        if (sanityShieldButton != null) sanityShieldButton.interactable = CanUpgrade(PlayerUpgradeNode.SanityShield, fragments);
+        if (laserButton != null) laserButton.interactable = CanUpgrade(PlayerUpgradeNode.Laser, fragments);
+        if (sanityRunButton != null) sanityRunButton.interactable = CanUpgrade(PlayerUpgradeNode.SanityRun, fragments);
     }
 
     private bool CanUpgrade(PlayerUpgradeNode node, long fragments)
@@ -306,13 +269,7 @@ public class PlayerUpgradeUI : MonoBehaviour
         {
             overviewStatsText.text = string.Format(
                 overviewStatsFormat,
-                rechargeBonus,
-                drainReduction,
-                shieldSpeedBonus,
-                shieldHitCostReduction,
-                laserCostReduction,
-                laserCooldownReduction,
-                runSpeedBonus
+                rechargeBonus, drainReduction, shieldSpeedBonus, shieldHitCostReduction, laserCostReduction, laserCooldownReduction, runSpeedBonus
             );
         }
     }
@@ -323,20 +280,12 @@ public class PlayerUpgradeUI : MonoBehaviour
             text.text = string.Format(format, values);
     }
 
-    private void RefreshStatsText(
-        int sanityChargeLevel = -1,
-        int sanityShieldLevel = -1,
-        int laserLevel = -1,
-        int sanityRunLevel = -1)
+    private void RefreshStatsText(int sanityChargeLevel = -1, int sanityShieldLevel = -1, int laserLevel = -1, int sanityRunLevel = -1)
     {
-        if (sanityChargeLevel < 0)
-            sanityChargeLevel = upgradeSystem != null ? upgradeSystem.SanityChargeLevel : 0;
-        if (sanityShieldLevel < 0)
-            sanityShieldLevel = upgradeSystem != null ? upgradeSystem.SanityShieldLevel : 0;
-        if (laserLevel < 0)
-            laserLevel = upgradeSystem != null ? upgradeSystem.LaserLevel : 0;
-        if (sanityRunLevel < 0)
-            sanityRunLevel = upgradeSystem != null ? upgradeSystem.SanityRunLevel : 0;
+        if (sanityChargeLevel < 0) sanityChargeLevel = upgradeSystem != null ? upgradeSystem.SanityChargeLevel : 0;
+        if (sanityShieldLevel < 0) sanityShieldLevel = upgradeSystem != null ? upgradeSystem.SanityShieldLevel : 0;
+        if (laserLevel < 0) laserLevel = upgradeSystem != null ? upgradeSystem.LaserLevel : 0;
+        if (sanityRunLevel < 0) sanityRunLevel = upgradeSystem != null ? upgradeSystem.SanityRunLevel : 0;
 
         if (currentStatsText != null)
         {
@@ -344,9 +293,7 @@ public class PlayerUpgradeUI : MonoBehaviour
                 currentStatsFormat,
                 GetPercent(healthStat),
                 GetPercent(sanityStat),
-                stabilitySystem != null
-                    ? GetPercent(stabilitySystem as IResourceStat)
-                    : 0,
+                stabilitySystem != null ? GetPercent(stabilitySystem as IResourceStat) : 0,
                 currency != null ? currency.CurrentFragments : 0
             );
         }
@@ -356,9 +303,7 @@ public class PlayerUpgradeUI : MonoBehaviour
 
     private static int GetPercent(IResourceStat resourceStat)
     {
-        if (resourceStat == null || resourceStat.Max <= 0f)
-            return 0;
-
+        if (resourceStat == null || resourceStat.Max <= 0f) return 0;
         return Mathf.RoundToInt(Mathf.Clamp01(resourceStat.Current / resourceStat.Max) * 100f);
     }
 

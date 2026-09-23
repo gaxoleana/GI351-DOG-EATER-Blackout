@@ -3,9 +3,11 @@ using UnityEngine;
 public class BossAttackTelegraph : MonoBehaviour
 {
     private enum Shape { Circle, Line, Fan }
+
     private LineRenderer lineRenderer;
     private MeshFilter fillMeshFilter;
     private MeshRenderer fillMeshRenderer;
+
     private Shape shape;
     private float radius;
     private float length;
@@ -14,47 +16,60 @@ public class BossAttackTelegraph : MonoBehaviour
     private float progress;
     private Color color;
     private int segmentCount;
-    private bool showFullLine;
+
     private bool rotationFrozen;
     private Quaternion frozenRotation;
+    private Vector3 frozenPosition;
 
-    public static BossAttackTelegraph CreateCircle(Vector3 center, float radius, float duration, Color color) => Create(center, Shape.Circle, radius, 0f, 0f, 360f, color, 48);
+    // ระยะยกจากพื้นเล็กน้อยป้องกันการจมลงไปในฉาก/พื้น
+    private const float Y_OFFSET = 0.05f;
 
-    public static BossAttackTelegraph CreateVerticalCircle(Vector3 center, Vector3 direction, float radius, float duration, Color color)
-    {
-        BossAttackTelegraph telegraph = Create(center, Shape.Circle, radius, 0f, 0f, 360f, color, 48);
-        telegraph.transform.right = Flatten(direction);
-        telegraph.transform.Rotate(Vector3.right, 90f, Space.Self);
-        telegraph.FreezeRotation();
-        return telegraph;
-    }
+    public static BossAttackTelegraph CreateCircle(Vector3 center, float radius, float duration, Color color)
+        => Create(center, Shape.Circle, radius, 0f, 0f, 360f, color, 48);
 
     public static BossAttackTelegraph CreateLine(Vector3 origin, Vector3 direction, float length, float width, float duration, Color color)
     {
         BossAttackTelegraph telegraph = Create(origin, Shape.Line, 0f, length, width, 0f, color, 5);
-        telegraph.transform.right = Flatten(direction);
-        telegraph.FreezeRotation();
+        telegraph.UpdatePositionAndDirection(origin, direction);
         return telegraph;
     }
 
     public static BossAttackTelegraph CreateFan(Vector3 origin, Vector3 direction, float radius, float angle, float duration, Color color)
     {
         BossAttackTelegraph telegraph = Create(origin, Shape.Fan, radius, 0f, 0f, angle, color, 28);
-        telegraph.transform.right = Flatten(direction);
-        telegraph.FreezeRotation();
+        telegraph.UpdatePositionAndDirection(origin, direction);
         return telegraph;
+    }
+
+    public void UpdatePositionAndDirection(Vector3 position, Vector3 direction)
+    {
+        if (rotationFrozen) return;
+
+        // ยกพิกัด Y ขึ้นเล็กน้อยเพื่อให้ลอยอยู่เหนือพื้น
+        position.y += Y_OFFSET;
+        transform.position = position;
+
+        Vector3 flatDir = Flatten(direction);
+        if (flatDir.sqrMagnitude > 0.001f)
+        {
+            transform.right = flatDir;
+        }
     }
 
     public void FreezeRotation()
     {
         frozenRotation = transform.rotation;
+        frozenPosition = transform.position;
         rotationFrozen = true;
     }
 
     private void LateUpdate()
     {
         if (rotationFrozen)
+        {
             transform.rotation = frozenRotation;
+            transform.position = frozenPosition;
+        }
     }
 
     public void SetProgress(float value)
@@ -62,19 +77,19 @@ public class BossAttackTelegraph : MonoBehaviour
         progress = Mathf.Clamp01(value);
         UpdateVisual();
         if (progress >= 1f)
+        {
             Destroy(gameObject);
-    }
-
-    public void ShowFullLine()
-    {
-        showFullLine = true;
-        UpdateVisual();
+        }
     }
 
     private static BossAttackTelegraph Create(Vector3 position, Shape shape, float radius, float length, float width, float angle, Color color, int segmentCount)
     {
+        // สร้างตำแหน่งให้อยู่เหนือพื้นเล็กน้อย
+        position.y += Y_OFFSET;
+
         GameObject telegraphObject = new("Boss Attack Telegraph");
         telegraphObject.transform.position = position;
+
         BossAttackTelegraph telegraph = telegraphObject.AddComponent<BossAttackTelegraph>();
         telegraph.shape = shape;
         telegraph.radius = radius;
@@ -83,21 +98,26 @@ public class BossAttackTelegraph : MonoBehaviour
         telegraph.angle = angle;
         telegraph.color = color;
         telegraph.segmentCount = segmentCount;
+
+        // ค้นหา Shader ที่ใช้ได้ทั้ง Built-in และ URP
+        Shader defaultShader = Shader.Find("Sprites/Default") ?? Shader.Find("Universal Render Pipeline/2D/Sprite-Unlit-Default") ?? Shader.Find("Unlit/Color");
+        Material sharedMaterial = new Material(defaultShader);
+
+        // ตั้งค่า LineRenderer (เส้นขอบ)
         telegraph.lineRenderer = telegraphObject.AddComponent<LineRenderer>();
         telegraph.lineRenderer.useWorldSpace = false;
         telegraph.lineRenderer.loop = shape != Shape.Line;
         telegraph.lineRenderer.alignment = LineAlignment.TransformZ;
-        telegraph.lineRenderer.material = new Material(Shader.Find("Sprites/Default"));
-        telegraph.lineRenderer.startWidth = 0.08f;
-        telegraph.lineRenderer.endWidth = 0.08f;
+        telegraph.lineRenderer.material = sharedMaterial;
+        telegraph.lineRenderer.startWidth = 0.1f;
+        telegraph.lineRenderer.endWidth = 0.1f;
+        telegraph.lineRenderer.sortingOrder = 10; // กำหนดให้อยู่สูงกว่าพื้น
 
-        if (shape == Shape.Circle || shape == Shape.Line)
-        {
-            telegraph.fillMeshFilter = telegraphObject.AddComponent<MeshFilter>();
-            telegraph.fillMeshRenderer = telegraphObject.AddComponent<MeshRenderer>();
-            telegraph.fillMeshRenderer.material = new Material(Shader.Find("Sprites/Default"));
-            telegraph.fillMeshRenderer.sortingOrder = -1;
-        }
+        // ตั้งค่า Fill Mesh (สีเต็มด้านใน)
+        telegraph.fillMeshFilter = telegraphObject.AddComponent<MeshFilter>();
+        telegraph.fillMeshRenderer = telegraphObject.AddComponent<MeshRenderer>();
+        telegraph.fillMeshRenderer.material = new Material(sharedMaterial);
+        telegraph.fillMeshRenderer.sortingOrder = 9; // กำหนดให้อยู่ใต้เส้นขอบเล็กน้อย แต่อยู่เหนือพื้น
 
         telegraph.UpdateVisual();
         return telegraph;
@@ -106,7 +126,7 @@ public class BossAttackTelegraph : MonoBehaviour
     private void UpdateVisual()
     {
         Color currentColor = color;
-        currentColor.a = Mathf.Lerp(0.45f, 1f, progress);
+        currentColor.a = Mathf.Lerp(0.5f, 1f, progress);
         lineRenderer.startColor = currentColor;
         lineRenderer.endColor = currentColor;
         lineRenderer.startWidth = Mathf.Lerp(0.08f, 0.18f, progress);
@@ -115,7 +135,7 @@ public class BossAttackTelegraph : MonoBehaviour
         if (fillMeshRenderer != null)
         {
             Color fillColor = color;
-            fillColor.a = Mathf.Lerp(0.08f, 0.42f, progress);
+            fillColor.a = Mathf.Lerp(0.2f, 0.6f, progress);
             fillMeshRenderer.material.color = fillColor;
         }
 
@@ -127,11 +147,10 @@ public class BossAttackTelegraph : MonoBehaviour
     private void DrawCircle()
     {
         lineRenderer.positionCount = segmentCount;
-        float inwardRadius = Mathf.Max(0f, radius - lineRenderer.startWidth * 0.5f);
         for (int index = 0; index < segmentCount; index++)
         {
             float radians = index * Mathf.PI * 2f / segmentCount;
-            lineRenderer.SetPosition(index, new Vector3(Mathf.Cos(radians), 0f, Mathf.Sin(radians)) * inwardRadius);
+            lineRenderer.SetPosition(index, new Vector3(Mathf.Cos(radians), 0f, Mathf.Sin(radians)) * radius);
         }
 
         DrawFilledCircle();
@@ -139,23 +158,26 @@ public class BossAttackTelegraph : MonoBehaviour
 
     private void DrawFilledCircle()
     {
-        int visibleSegments = Mathf.Max(3, Mathf.CeilToInt(segmentCount * Mathf.Max(progress, 0.02f)));
-        Vector3[] vertices = new Vector3[visibleSegments + 1];
-        int[] triangles = new int[visibleSegments * 3];
+        float currentRadius = radius * Mathf.Clamp01(progress);
+        if (currentRadius <= 0.001f)
+        {
+            if (fillMeshFilter.mesh != null) fillMeshFilter.mesh.Clear();
+            return;
+        }
+
+        Vector3[] vertices = new Vector3[segmentCount + 1];
+        int[] triangles = new int[segmentCount * 3];
 
         vertices[0] = Vector3.zero;
-        float visibleAngle = Mathf.PI * 2f * Mathf.Clamp01(progress);
-        for (int index = 0; index < visibleSegments; index++)
+        for (int index = 0; index < segmentCount; index++)
         {
-            float radians = visibleSegments <= 1
-                ? 0f
-                : visibleAngle * index / (visibleSegments - 1);
-            vertices[index + 1] = new Vector3(Mathf.Cos(radians), 0f, Mathf.Sin(radians)) * radius;
+            float radians = index * Mathf.PI * 2f / segmentCount;
+            vertices[index + 1] = new Vector3(Mathf.Cos(radians), 0f, Mathf.Sin(radians)) * currentRadius;
 
             int triangleIndex = index * 3;
             triangles[triangleIndex] = 0;
             triangles[triangleIndex + 1] = index + 1;
-            triangles[triangleIndex + 2] = index + 2 <= visibleSegments ? index + 2 : 1;
+            triangles[triangleIndex + 2] = (index + 2 <= segmentCount) ? index + 2 : 1;
         }
 
         Mesh mesh = fillMeshFilter.mesh;
@@ -167,21 +189,27 @@ public class BossAttackTelegraph : MonoBehaviour
 
     private void DrawLine()
     {
-        float visibleLength = showFullLine ? length : length * progress;
         float halfWidth = width * 0.5f;
         lineRenderer.loop = true;
         lineRenderer.positionCount = 5;
         lineRenderer.SetPosition(0, new Vector3(0f, 0f, -halfWidth));
-        lineRenderer.SetPosition(1, new Vector3(visibleLength, 0f, -halfWidth));
-        lineRenderer.SetPosition(2, new Vector3(visibleLength, 0f, halfWidth));
+        lineRenderer.SetPosition(1, new Vector3(length, 0f, -halfWidth));
+        lineRenderer.SetPosition(2, new Vector3(length, 0f, halfWidth));
         lineRenderer.SetPosition(3, new Vector3(0f, 0f, halfWidth));
         lineRenderer.SetPosition(4, new Vector3(0f, 0f, -halfWidth));
 
-        DrawFilledLine(visibleLength, halfWidth);
+        DrawFilledLine(halfWidth);
     }
 
-    private void DrawFilledLine(float visibleLength, float halfWidth)
+    private void DrawFilledLine(float halfWidth)
     {
+        float visibleLength = length * Mathf.Clamp01(progress);
+        if (visibleLength <= 0.001f)
+        {
+            if (fillMeshFilter.mesh != null) fillMeshFilter.mesh.Clear();
+            return;
+        }
+
         Vector3[] vertices =
         {
             new(0f, 0f, -halfWidth),
@@ -199,14 +227,53 @@ public class BossAttackTelegraph : MonoBehaviour
 
     private void DrawFan()
     {
-        float visibleAngle = angle * progress;
-        float startAngle = -visibleAngle * 0.5f;
-        lineRenderer.positionCount = segmentCount;
+        float halfAngle = angle * 0.5f;
+        lineRenderer.loop = true;
+        lineRenderer.positionCount = segmentCount + 2;
+        lineRenderer.SetPosition(0, Vector3.zero);
+
         for (int index = 0; index < segmentCount; index++)
         {
-            float radians = Mathf.Lerp(startAngle, -startAngle, index / (float)(segmentCount - 1)) * Mathf.Deg2Rad;
-            lineRenderer.SetPosition(index, new Vector3(Mathf.Cos(radians), 0f, Mathf.Sin(radians)) * radius);
+            float radians = Mathf.Lerp(-halfAngle, halfAngle, index / (float)(segmentCount - 1)) * Mathf.Deg2Rad;
+            lineRenderer.SetPosition(index + 1, new Vector3(Mathf.Cos(radians), 0f, Mathf.Sin(radians)) * radius);
         }
+        lineRenderer.SetPosition(segmentCount + 1, Vector3.zero);
+
+        DrawFilledFan(halfAngle);
+    }
+
+    private void DrawFilledFan(float halfAngle)
+    {
+        float currentRadius = radius * Mathf.Clamp01(progress);
+        if (currentRadius <= 0.001f)
+        {
+            if (fillMeshFilter.mesh != null) fillMeshFilter.mesh.Clear();
+            return;
+        }
+
+        Vector3[] vertices = new Vector3[segmentCount + 1];
+        int[] triangles = new int[(segmentCount - 1) * 3];
+
+        vertices[0] = Vector3.zero;
+        for (int index = 0; index < segmentCount; index++)
+        {
+            float radians = Mathf.Lerp(-halfAngle, halfAngle, index / (float)(segmentCount - 1)) * Mathf.Deg2Rad;
+            vertices[index + 1] = new Vector3(Mathf.Cos(radians), 0f, Mathf.Sin(radians)) * currentRadius;
+
+            if (index < segmentCount - 1)
+            {
+                int triangleIndex = index * 3;
+                triangles[triangleIndex] = 0;
+                triangles[triangleIndex + 1] = index + 1;
+                triangles[triangleIndex + 2] = index + 2;
+            }
+        }
+
+        Mesh mesh = fillMeshFilter.mesh;
+        mesh.Clear();
+        mesh.vertices = vertices;
+        mesh.triangles = triangles;
+        mesh.RecalculateBounds();
     }
 
     private static Vector3 Flatten(Vector3 direction)

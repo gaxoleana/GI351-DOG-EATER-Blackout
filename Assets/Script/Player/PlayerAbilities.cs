@@ -4,8 +4,8 @@ using UnityEngine.InputSystem;
 public class PlayerAbilities : MonoBehaviour
 {
     private const string PlayerActionMapName = "Player";
-    private const string RechargeActionName = "Recharge";
-    private const string ShieldActionName = "Shield";
+    private const string RechargeActionName = "Recharge"; // ตั้งค่าปุ่ม G ใน Input Action
+    private const string ShieldActionName = "Shield";     // ตั้งค่าปุ่ม F ใน Input Action
 
     [Header("References")]
     [SerializeField] private InputActionAsset inputActions;
@@ -13,10 +13,18 @@ public class PlayerAbilities : MonoBehaviour
     [SerializeField] private PlayerController playerController;
     [SerializeField] private GameObject shieldVisual;
 
+    [Header("Sanity Charge Audio")]
+    [SerializeField] private AudioSource chargeAudioSource;
+    [SerializeField] private AudioClip chargeAudioClip;
+    [Tooltip("ความแหลมเสียงเริ่มต้นตอนเริ่มกดชาร์จ")]
+    [SerializeField] private float minChargePitch = 0.8f;
+    [Tooltip("ความแหลมเสียงสูงสุดขณะชาร์จ")]
+    [SerializeField] private float maxChargePitch = 1.75f;
+    [Tooltip("ความเร็วในการไต่ระดับ Pitch สูงขึ้น")]
+    [SerializeField] private float pitchRiseSpeed = 0.6f;
+
     [Header("Shield Settings")]
-    [Tooltip("Sanity cost paid each time the player is hit while the shield is raised")]
     [SerializeField, Range(0f, 100f)] private float hitSanityCostPercent = 25f;
-    [Tooltip("Movement speed multiplier while the shield is raised (0.5 = 50% slower)")]
     [SerializeField, Range(0f, 1f)] private float shieldSpeedMultiplier = 0.5f;
 
     [Header("Sanity Run")]
@@ -61,8 +69,9 @@ public class PlayerAbilities : MonoBehaviour
         if (shieldAction != null)
         {
             shieldAction.Enable();
-            // กด F แต่ละครั้งจะสลับสถานะโล่
             shieldAction.started += OnShieldStarted;
+            shieldAction.performed += OnShieldStarted;
+            shieldAction.canceled += OnShieldCanceled;
         }
     }
 
@@ -78,9 +87,12 @@ public class PlayerAbilities : MonoBehaviour
         if (shieldAction != null)
         {
             shieldAction.started -= OnShieldStarted;
+            shieldAction.performed -= OnShieldStarted;
+            shieldAction.canceled -= OnShieldCanceled;
             shieldAction.Disable();
         }
 
+        StopRechargeAudio();
         isRecharging = false;
         EndShield();
     }
@@ -94,12 +106,18 @@ public class PlayerAbilities : MonoBehaviour
     private void Update()
     {
         if (!PlayerPersistenceManager.IsGameplayActive)
+        {
+            if (isRecharging) StopRechargeAudio();
             return;
+        }
 
         upgradeSystem ??= GetComponent<PlayerUpgradeSystem>();
 
         if (isRecharging && playerSanity != null)
+        {
             playerSanity.Charge(Time.deltaTime);
+            UpdateChargeAudio();
+        }
         else if (playerSanity != null)
         {
             float drainPercent = upgradeSystem != null
@@ -114,11 +132,25 @@ public class PlayerAbilities : MonoBehaviour
         UpdateMovementSpeed();
     }
 
+    // --- ชาร์จ Sanity (ปุ่ม G) ---
     private void OnRechargeStarted(InputAction.CallbackContext ctx)
     {
         isRecharging = true;
         playerController?.SetSprintLocked(true);
         playerController?.SetRechargeSlowdown(true);
+
+        if (chargeAudioSource != null)
+        {
+            if (chargeAudioClip != null)
+            {
+                chargeAudioSource.clip = chargeAudioClip;
+                chargeAudioSource.loop = true;
+            }
+
+            chargeAudioSource.pitch = minChargePitch;
+            if (!chargeAudioSource.isPlaying)
+                chargeAudioSource.Play();
+        }
     }
 
     private void OnRechargeCanceled(InputAction.CallbackContext ctx)
@@ -126,15 +158,28 @@ public class PlayerAbilities : MonoBehaviour
         isRecharging = false;
         playerController?.SetSprintLocked(false);
         playerController?.SetRechargeSlowdown(false);
+
+        StopRechargeAudio();
     }
 
-    private void OnShieldStarted(InputAction.CallbackContext ctx)
+    private void UpdateChargeAudio()
     {
-        if (isShielding)
-            EndShield();
-        else
-            BeginShield();
+        if (chargeAudioSource == null || !chargeAudioSource.isPlaying) return;
+
+        chargeAudioSource.pitch = Mathf.MoveTowards(chargeAudioSource.pitch, maxChargePitch, pitchRiseSpeed * Time.deltaTime);
     }
+
+    private void StopRechargeAudio()
+    {
+        if (chargeAudioSource != null && chargeAudioSource.isPlaying)
+        {
+            chargeAudioSource.Stop();
+        }
+    }
+
+    // --- กางโล่ (ปุ่ม F) ---
+    private void OnShieldStarted(InputAction.CallbackContext ctx) => BeginShield();
+    private void OnShieldCanceled(InputAction.CallbackContext ctx) => EndShield();
 
     private void BeginShield()
     {
@@ -159,7 +204,6 @@ public class PlayerAbilities : MonoBehaviour
         SetShieldVisible(false);
     }
 
-    // เรียกจาก PlayerDamageReceiver ตอนโดนตี — โล่จะหัก Sanity แทน HP
     public bool TryConsumeShield()
     {
         if (!IsShielding || playerSanity == null || !playerSanity.HasSanity)
